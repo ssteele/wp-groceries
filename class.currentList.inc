@@ -62,14 +62,38 @@ class currentList extends groceryList {
 
         if (!empty($this->groceries)) {
 
+            // Grab the user master list for this store
+            $master_list = new masterList();
+            $arr_master = $master_list->get_list( $store_id );
+
             $unit_map = get_option('_ingredient_units');
 
             $id = 'i';
             $amount = 'a';
             $unit = 'u';
+            $pic = 'p';
+
+            // Get user store dropdown selection
+            $user_selected_store_url = ( isset( $_GET['sid'] ) && ! empty( $_GET['sid'] ) ) ? '?sid=' . sanitize_input( $_GET['sid'] ) : '';
+
+            $refresh_alert = false;
+            echo '<a href="' . site_url() . '/grocery-list/' . $user_selected_store_url . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
+
+            $arr_newbies = $master_list->get_new_ingredients( $store_id );
 
             foreach ($this->groceries as $item) {
 
+                // Make sure the item is represented in the master store list
+                if ( ! in_array( $item[$id], $arr_master ) ) {
+
+                    // Not in the master list - prepend it
+                    $master_list->insert_new_ingredient( $store_id, $item[$id] );
+                    $refresh_alert = true;
+
+                }
+
+                // Prepend any item description (usually 'organic')
+                $desc = term_description( $item[$id], 'ingredient' );
                 $name = tax_ids_to_ingredients(array($item[$id]));
                 $unit_name = unit_index_to_name($item[$unit]);
 
@@ -78,16 +102,42 @@ class currentList extends groceryList {
                     $unit_name = $unit_map[$unit_name];
                 }
 
+                // Get recipe thumbnail
+                $thumb = ( isset( $item[$pic] ) && ! empty( $item[$pic] ) ) ? $item[$pic] . ' ' : '';
+
                 // Build the list item
                 $li  = '';
+                $li .= $thumb;
                 $li .= (isset($item[$amount]) && !empty($item[$amount])) ? $item[$amount] . ' ' : '';
                 $li .= (isset($unit_name) && !empty($unit_name)) ? $unit_name . ' ' : '';
+                $li .= ( isset( $desc ) && ! empty( $desc ) ) ? strip_tags( $desc ) . ' ' : '';
                 $li .= $name[0] . ' ';
 
-                echo '<li id="' . $item[$id] . '">';
-                echo        $li;
+                // Build necessary classes
+                $li_class = array();
+
+                if ( isset( $arr_newbies ) && is_array( $arr_newbies ) && in_array( $item[$id], $arr_newbies ) ) {
+                    $li_class[] = 'new-item';
+                }
+
+                if ( ! empty( $thumb ) ) {
+                    $li_class[] = 'has-thumb';
+                }
+
+                $li_classes = implode( ' ' , $li_class );
+
+                echo '<li id="' . $item[$id] . '" class="' . $li_classes . '">';
+                echo    $li;
                 echo '</li>';
 
+            }
+
+            if ( $refresh_alert ) {
+                echo "
+                <script>
+                    jQuery('#notify_new').show();
+                </script>
+                ";
             }
 
         } else {
@@ -103,6 +153,7 @@ class currentList extends groceryList {
 
     /**
      * Save groceries submitted via 'grocery-list' admin page
+     * @return boolean    True if new ingredient added (to alert admin user to refresh the page before creating a new list)
      */
     public function save_groceries() {
 
@@ -111,17 +162,21 @@ class currentList extends groceryList {
 
         // Define categories and expected input types
         $cats = array(
-            'recipe'         => 'i',
-            'ingredient'     => 'i',
-            'new_ingredient' => 's'
+            'i'              => 'i',                                        // Toggled ingredients from list prior
+            'recipe'         => 'i',                                        // Recipes
+            'ingredient'     => 'i',                                        // Ingredients chosen from 'ingredient' taxonomy terms
+            'new_ingredient' => 's',                                        // Unknown ingredient (string, not ID)
         );
 
         // Define category-specific arrays and sanitize user input
         foreach ($cats as $cat => $type) {
 
+            // Create an array (even if there's nothing to fill it)
+            $$cat = array();
+
+            // Bail if nothing to fill
             if (empty($_POST[$cat])) continue;
 
-            $$cat = array();
             foreach ($_POST[$cat] as $item) {
 
                 array_push($$cat, sanitize_input($item, $type));
@@ -130,15 +185,22 @@ class currentList extends groceryList {
 
         }
 
+        // Merge new ingredients with toggled old ingredients
+        $ingredient = array_merge( $i, $ingredient );
+
         $id = 'i';
         $amount = 'a';
         $unit = 'u';
         $type = 't';
+        $pic = 'p';
 
         // Handle recipes
         if (isset($recipe) && !empty($recipe)) {
 
             foreach ($recipe as $r) {
+
+                // Grab recipe thumbnail
+                $r_thumbnail = get_the_post_thumbnail( $r, 'icon' );
 
                 $arr_meta = get_post_meta($r);
 
@@ -162,6 +224,7 @@ class currentList extends groceryList {
                             $amount     => $meta['amount'],
                             $unit       => $meta_unit,
                             $type       => 'i',
+                            $pic        => '<div class="recipe-thumb">' . $r_thumbnail . '</div>',
                         );
 
                     }
@@ -190,18 +253,31 @@ class currentList extends groceryList {
 
         }
 
+        $is_new_ingredient = false;
+
         // Handle unknown ingredients submitted by user (this allows the user to save anything to the list)
+        // ...make unknown ingredients known
         if (isset($new_ingredient) && !empty($new_ingredient)) {
 
             foreach ($new_ingredient as $n) {
 
                 if (!empty($n)) {
 
-                    $arr_items[] = array(
-                        $amount     => 0,
-                        $unit       => 0,
-                        $type       => 'n',
-                    );
+                    $is_new_ingredient = true;
+
+                    // Add the new ingredient to our list of terms
+                    $term_id = wp_insert_term( $n, 'ingredient' );
+
+                    if ( ! empty( $term_id ) && is_array( $term_id ) ) {
+
+                        $arr_items[] = array(
+                            $id         => $term_id['term_id'],
+                            $amount     => 0,
+                            $unit       => 0,
+                            $type       => 'i',
+                        );
+
+                    }
 
                 }
 
@@ -210,6 +286,8 @@ class currentList extends groceryList {
         }
 
         $this->set_list($arr_items);
+
+        return $is_new_ingredient;
 
     }
 

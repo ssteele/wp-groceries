@@ -29,7 +29,7 @@ class groceryStores {
      */
     private function set_store($store_id=null) {
 
-        // Flage new or existing store
+        // Flag new or existing store
         $is_new = is_null($store_id) ? true : false;
 
         // Handle user input
@@ -115,10 +115,31 @@ class groceryStores {
     }
 
 
-    private function get_stores() {
+    /**
+     * Return a user's stores
+     * @return arr    User store list
+     */
+    public function get_stores() {
 
         global $wpdb;
         return $wpdb->get_results("SELECT * FROM wp_stores WHERE user_id = $this->user_id");
+
+    }
+
+
+    /**
+     * Return a single store object
+     * @param  int   $store_id    Store identifier
+     * @return obj                Store object
+     */
+    private function get_store( $store_id ) {
+
+        if ( ! $store_id ) return false;
+
+        global $wpdb;
+        $store = $wpdb->get_results("SELECT * FROM wp_stores WHERE id = $store_id");
+
+        return $store[0];
 
     }
 
@@ -219,6 +240,9 @@ class groceryStores {
     }
 
 
+    /**
+     * Allow user to select a store from the front-end grocery list dropdown
+     */
     private function select_store() {
 
         if (isset($_GET['sid']) && !empty($_GET['sid'])) {
@@ -261,6 +285,29 @@ class groceryStores {
         echo '</div>';
 
         echo '<div class="clearfix"></div>';
+
+    }
+
+
+    /**
+     * Retrieve/Render a store name
+     * @param  int  $store_id    Store identifier
+     * @param  bool $echo        If true, echo name
+     * @return str               Store name
+     */
+    public function get_store_name( $store_id, $echo = false ) {
+
+        $store = $this->get_store( $store_id );
+
+        if ( ! $store ) return false;
+
+        $name = $store->name;
+
+        if ( $echo ) {
+            echo $name;
+        }
+
+        return $name;
 
     }
 

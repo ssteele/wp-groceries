@@ -1,10 +1,9 @@
 <?php
 
-// http://loc.harville-steele.com/content/plugins/grocery_list/ajax/update_grocery_list.php?s=3&a=26&i=23&b=29
-// ...using above:below context here, not before:after
+// http://loc.harville-steele.com/content/plugins/grocery_list/ajax/remove_sorted_new_item.php?id=98
 
 // Cut off direct access
-if ( 'POST' !== $_SERVER['REQUEST_METHOD'] || empty( $_POST['s'] ) ) exit();
+if ( 'POST' !== $_SERVER['REQUEST_METHOD'] || empty( $_POST['s'] ) || empty( $_POST['i'] ) ) exit();
 
 // Bootstrap into WP environment
 require_once '../../../../wp-load.php';
@@ -16,7 +15,7 @@ if (!user_can($user_id, 'manage_options')) {
 }
 
 // Grab the post variables
-$post_vars = array( 's', 'a', 'i', 'b' );
+$post_vars = array( 's', 'i' );
 
 foreach ($post_vars as $p) {
 
@@ -34,7 +33,7 @@ foreach ($post_vars as $p) {
 require_once '../grocery_list.php';
 
 $master_list = new masterList();
-$master_list->update_store_order($s, $a, $i, $b);
+$master_list->remove_sorted_new_item( $s, $i );
 
 die;
 

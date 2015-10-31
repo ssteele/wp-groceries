@@ -40,7 +40,7 @@ class masterList extends groceryList {
      * @param  int   $store_id    Store identifier
      * @return array              Ordered grocery store items list
      */
-    protected function get_list($store_id=null) {
+    public function get_list($store_id=null) {
 
         global $wpdb;
         $table = $wpdb->prefix . 'grocery_order';
@@ -57,45 +57,175 @@ class masterList extends groceryList {
      * Update grocery item order for a store while shopping
      * ...called from ajax handler
      * @param  int $store_id    Store identifier
-     * @param  integer $a       Dragged grocery item ID
-     * @param  integer $b       Grocery item ID following above (acts as index)
+     * @param  integer $a       Arbitrary item ID found above dragged item's new position
+     * @param  integer $i       Dragged grocery item ID
+     * @param  integer $b       Grocery item ID below new dragged item's position (acts as index w/in JS lib)
+     *
+     * ...using above:below context here, not before:after
+     *
      */
-    public function update_store_order($store_id, $a, $b) {
+    public function update_store_order( $store_id, $a, $i, $b ) {
 
-        $arr = $this->get_list($store_id);
+        $arr = $this->get_list( $store_id );
 
-        // Find 'a'
-        $key_a = array_search($a, $arr);
+        // Find 'i'
+        $key_i = array_search( $i, $arr );
 
-        // Remove 'a'
-        array_splice($arr, $key_a, 1);
+        // Remove 'i'
+        array_splice( $arr, $key_i, 1 );
 
-        if (isset($b) && $b != 0) {
+        if ( isset( $a ) ) {
 
-            // Find 'b'
-            $key_b = array_search($b, $arr);
+            if ( isset( $b ) ) {
 
-            if ($key_b == 0) {
+                // Find positions of items above and below item after user sort
+                $key_a = array_search( $a, $arr );
+                $key_b = array_search( $b, $arr );
 
-                // Edge case: send 'a' to the front of the line
-                array_unshift($arr, $a);
+                if ( $i === $a || $i === $b ) {
 
-            } else {
+                    // Self case: $key_i === $key_b (if the item were still in the list array and $key_b was found)
+                    // Put the item back where it was
+                    array_splice( $arr, $key_i, 0, $i );
 
-                // Insert a before 'b'
-                array_splice($arr, $key_b, 0, $a);
+                } else if ( 0 === $key_b ) {
+
+                    // Edge case: send 'i' to the front of the line
+                    array_unshift( $arr, $i );
+
+                } else if ( 0 === $b ) {
+
+                    // Edge case: insert i after 'a' (back of the current line)
+                    array_splice( $arr, $key_a + 1, 0, $i );
+
+                } else if ( $key_i > $key_b ) {
+
+                    // Insert i before 'b'
+                    array_splice( $arr, $key_b, 0, $i );
+
+                } else if ( $key_i < $key_b ) {
+
+                    // Insert i after 'a'
+                    array_splice( $arr, $key_a + 1, 0, $i );
+
+                }
 
             }
-
-        } else {
-
-            // Edge case: send 'a' to the back of the line
-            array_push($arr, $a);
 
         }
 
         // Save the master list
-        $this->set_list($arr, $store_id);
+        $this->set_list( $arr, $store_id );
+
+    }
+
+
+    /**
+     * Mark items saved to the current list that do not exist in a store's master list as new
+     * @param  int $store_id     Store identifier
+     * @param  arr $new_items    List of new items
+     */
+    private function set_new_ingredients( $store_id, $new_items ) {
+
+        global $wpdb;
+        $wpdb->update(
+            $wpdb->prefix . 'grocery_order',
+            array(
+                'new_items' => maybe_serialize( $new_items ),
+            ),
+            array(
+                'user_id'   => $this->user_id,
+                'store_id'  => $store_id,
+            ),
+            array(
+                '%s',
+            ),
+            array(
+                '%d',
+                '%d',
+            )
+        );
+
+    }
+
+
+    /**
+     * Retrieve items that have not been incoporated into a store's master list
+     * @param  int $store_id     Store identifier
+     * @return arr               List of new items
+     */
+    public function get_new_ingredients( $store_id ) {
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'grocery_order';
+
+        $query = "SELECT new_items FROM $table WHERE user_id = '$this->user_id' AND store_id = '$store_id'";
+        $new_items = $wpdb->get_var( $query );
+
+        return maybe_unserialize( $new_items );
+
+    }
+
+
+    /**
+     * Remove items from the new items table
+     * This happens when the item is sorted by the user into the master list
+     * @param  int $store_id    Store identifier
+     * @param  int $term_id     Newly assigned ingredient ID
+     */
+    public function remove_sorted_new_item( $store_id, $term_id ) {
+
+        // Get existing new items
+        $new_items = $this->get_new_ingredients( $store_id );
+
+        if ( ! empty($new_items) && is_array( $new_items ) && in_array( $term_id, $new_items ) ) {
+
+            $key_i = array_search( $term_id, $new_items );
+            array_splice( $new_items, $key_i, 1 );
+
+            $this->set_new_ingredients( $store_id, $new_items );
+
+        }
+
+    }
+
+
+    /**
+     * Mark items saved to the current list that do not exist in a store's master list as new
+     * @param  int $store_id    Store identifier
+     * @param  int $term_id     Newly assigned ingredient ID
+     */
+    private function log_new_ingredient( $store_id, $term_id ) {
+
+        // Get existing new items
+        $new_items = $this->get_new_ingredients( $store_id );
+
+        // Merge this item in
+        if ( ! empty( $new_items ) ) {
+            $new_items[] = $term_id;
+        } else {
+            $new_items = array( $term_id );
+        }
+
+        $this->set_new_ingredients( $store_id, $new_items );
+
+    }
+
+
+    /**
+     * Prepend new ingredient to a user store's master list
+     * @param  int $store_id    Store identifier
+     * @param  int $term_id     Newly assigned ingredient ID
+     */
+    public function insert_new_ingredient( $store_id, $term_id ) {
+
+        // Log new ingredient to DB until it's incorporated into the master list
+        $this->log_new_ingredient( $store_id, $term_id );
+
+        $groceries = $this->get_list( $store_id );
+        array_unshift( $groceries, $term_id );
+
+        $this->set_list( $groceries, $store_id );
 
     }
 

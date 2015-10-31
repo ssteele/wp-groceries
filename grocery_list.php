@@ -6,9 +6,9 @@ Description: Create an interactive list to use while grocery shopping
 Version: 1.0
 Author: Steve Steele
 Author URI: http://steve-steele.com/
-.
-COMMENTS HERE
-.
+
+To turn this into an actual WP plugin, all of the javascript that pertains to the 'grocery_list' or 'recipes' plugins have to be extracted from the theme
+
 */
 
 
@@ -223,6 +223,8 @@ function the_groceries() {
 
     ?>
 
+    <h2><?php $grocery_store->get_store_name( $grocery_store->id, true ); ?></h2>
+
     <div class="ingredients groceries">
         <ul id="slip_list">
 
@@ -256,13 +258,30 @@ function render_grocery_list_admin_form() {
 
     if (isset($_POST['submit'])) {
 
-        $current_list->save_groceries();
+        $is_new_ingredient = $current_list->save_groceries();
 
         ?>
 
         <div class="updated"><p><strong>Grocery List Saved</strong></p></div>
 
-    <?php } ?>
+        <?php
+
+        if ( $is_new_ingredient ) {
+
+            $current_url = site_url() . '/wp-admin/edit.php?post_type=recipe&page=grocery-list';
+            ?>
+
+            <div class="updated">
+                <p><strong>New ingredient(s) added - please <a href="<?php echo $current_url; ?>">click here</a> before proceeding</strong></p>
+            </div>
+
+            <?php
+
+        }
+
+    }
+
+    ?>
 
     <div class="wrap grocery-list" ng-controller="IngredientsCtrl" ng-app>
 
@@ -272,23 +291,23 @@ function render_grocery_list_admin_form() {
 
             <div class="select">
 
-                <input class="search" id="search_recipe" type="text" placeholder="Recipe" tabindex="1" ng-model="search_recipe.name" />
-                <div class="dropdown-container">
-                    <ul class="filtered-dropdown">
-                        <li tabindex="100" ng-show="search_recipe.name" ng-repeat="recipe in recipes | filter:search_recipe" ng-click="addRecipeToList(recipe)">
-                            {{recipe.name}}
-                        </li>
-                    </ul>
-                </div>
-
                 <input class="search" id="search_ingredient" type="text" placeholder="Ingredient" tabindex="1" ng-model="search_ingredient.name" />
                 <div class="dropdown-container">
                     <ul class="filtered-dropdown">
                         <li tabindex="100" ng-show="search_ingredient.name" ng-repeat="ingredient in ingredients | filter:search_ingredient" ng-click="addIngredientToList(ingredient)">
                             {{ingredient.name}}
                         </li>
-                        <li tabindex="100" ng-show="search_ingredient.name" ng-click="addNewIngredientToList(search_ingredient)">
+                        <li tabindex="100" ng-show="renderUnknownIngredient(search_ingredient)" ng-click="addNewIngredientToList(search_ingredient)">
                             {{search_ingredient.name}}
+                        </li>
+                    </ul>
+                </div>
+
+                <input class="search" id="search_recipe" type="text" placeholder="Recipe" tabindex="1" ng-model="search_recipe.name" />
+                <div class="dropdown-container">
+                    <ul class="filtered-dropdown">
+                        <li tabindex="100" ng-show="search_recipe.name" ng-repeat="recipe in recipes | filter:search_recipe" ng-click="addRecipeToList(recipe)">
+                            {{recipe.name}}
                         </li>
                     </ul>
                 </div>
@@ -306,8 +325,13 @@ function render_grocery_list_admin_form() {
             </div>
 
             <div class="list-box existing">
-                <h3>Current items</h3>
-                <ul>
+
+                <h3>
+                    <input type="checkbox" id="current_items_toggle_all" />
+                    <label for="current_items_toggle_all">Current items</label>
+                </h3>
+
+                <ul id="current_items">
 
                     <?php
                     // Get existing list items
@@ -315,6 +339,7 @@ function render_grocery_list_admin_form() {
                     ?>
 
                 </ul>
+
             </div>
 
             <div class="clearfix"></div>
