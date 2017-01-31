@@ -9,14 +9,14 @@ $response = [
     'message'  => '',
 ];
 
-// Cut off direct access
+// cut off direct access
 if ('POST' !== $_SERVER['REQUEST_METHOD'] || empty($_POST['store_id'])) {
     $response['status'] = 'invalid';
     echo json_encode($response);
     die();
 }
 
-// Bootstrap into WP environment
+// bootstrap into WP environment
 require_once '../../../../../wp-load.php';
 
 $userId = get_current_user_id();
@@ -28,17 +28,18 @@ if (! user_can($userId, 'manage_options')) {
     die();
 }
 
-// Grab the post variables
+// grab the post variables
 $postVars = ['store_id'];
 
 foreach ($postVars as $p) {
     $$p = sanitize_input($_POST[$p], 's');
 }
 
-// Isolate store ID
+// isolate store ID
 $storeId = preg_replace('/delete_/', '', $store_id);
 
-$groceryStores = new GroceryStores();
+// delete store
+$groceryStores = new GroceryStores($userId);
 $groceryStores->deleteStore($storeId);
 
 echo json_encode($response);

@@ -71,7 +71,6 @@ class GroceryStores
      */
     private function setStore($storeId = null)
     {
-
         // Flag new or existing store
         $isNew = is_null($storeId) ? true : false;
 
@@ -249,7 +248,34 @@ class GroceryStores
 
 
     /**
-     * Return favorite user store
+     * Set user favorite store
+     * @param  int   $storeId    Store identifier
+     *
+     * @return void
+     */
+    private function setFavoriteStore($storeId)
+    {
+        update_user_meta($this->userId, '_favorite_store', $storeId);
+    }
+
+
+    /**
+     * Set user favorite store
+     * @param  int   $storeId    Store identifier
+     *
+     * @return void
+     */
+    public function saveFavoriteStore($storeId = null)
+    {
+        if ($storeId) {
+            $this->setFavoriteStore($storeId);
+        }
+    }
+
+
+    /**
+     * Return user favorite store
+     *
      * @return int    Favorite store identifier or false if not selected
      */
     private function getFavoriteStore()
