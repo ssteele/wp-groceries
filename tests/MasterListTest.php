@@ -8,13 +8,9 @@ class MasterListTest extends \PHPUnit_Framework_TestCase
     public function testHandleStoreItemReordering()
     {
         $userId = 1;
-        $store = 1;
-        $above = 2;
-        $item = 1;
-        $below = 3;
-        $list = [1, 2, 3, 4, 5];
-
         $masterList = new MasterList($userId);
+        $store = 1;
+        $list = [1, 2, 3, 4, 5];
 
         // move middle to same position
         $expectedReorderedList = [1, 2, 3, 4, 5];
