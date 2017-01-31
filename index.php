@@ -184,12 +184,12 @@ function unit_index_to_name($index)
 function grocery_list_shortcode($atts)
 {
     if (! is_admin()) {
-        // Bail if no user logged in and shortcode public attribute not explicitly set to true
-        if (! is_user_logged_in() && (isset($atts['public']) && $atts['public'] != true)) {
-            return false;
+        $primaryUserIsPublic = $atts['public'] ?? false;
+        if (is_user_logged_in() || $primaryUserIsPublic) {
+            the_groceries();
+        } else {
+            // redirect to welcome page that expounds on all the good things here and invites the user to create an account
         }
-
-        the_groceries();
     }
 }
 add_shortcode('groceries', 'grocery_list_shortcode');
