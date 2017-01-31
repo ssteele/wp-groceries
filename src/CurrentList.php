@@ -27,6 +27,7 @@ class CurrentList extends GroceryList
      * Retrieve grocery list from the DB
      * Sort items by aisle if store specified
      * @param  int   $storeId     Store identifier
+     *
      * @return array              Grocery list items
      */
     protected function getList($storeId = null)
@@ -53,9 +54,13 @@ class CurrentList extends GroceryList
     /**
      * Render the contents of the 'grocery_list' page
      * @param  int $storeId    Store identifier
+     *
+     * @return string          Markup
      */
     public function renderGroceries($storeId)
     {
+        $output = '';
+
         $this->getList($storeId);
 
         if (! empty($this->groceries)) {
@@ -75,7 +80,7 @@ class CurrentList extends GroceryList
             $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . sanitize_input($_GET['sid']) : '';
 
             $refreshAlert = false;
-            echo '<a href="' . site_url() . '/grocery-list/' . $userSelectedStoreUrl . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
+            $output .= '<a href="' . site_url() . '/grocery-list/' . $userSelectedStoreUrl . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
 
             $arrNewbies = $masterList->getNewIngredients($storeId);
 
@@ -126,28 +131,30 @@ class CurrentList extends GroceryList
 
                 $liClasses = implode(' ', $liClass);
 
-                echo '<li id="' . $item[$id] . '" class="' . $liClasses . '">';
-                echo    $li;
-                echo '</li>';
+                $output .= '<li id="' . $item[$id] . '" class="' . $liClasses . '">';
+                $output .=    $li;
+                $output .= '</li>';
 
             }
 
             if ($refreshAlert) {
-                echo "
+                $output .= "
                 <script>
                     jQuery('#notify_new').show();
                 </script>
                 ";
             }
 
-            echo '<div>';
-            echo    ($optionalFlag) ? '* denotes optional ingredient' : '';
-            echo '</div>';
+            $output .= '<div>';
+            $output .=    ($optionalFlag) ? '* denotes optional ingredient' : '';
+            $output .= '</div>';
         } else {
-            echo '<div style="margin:50px 0;">';
-            echo    'No groceries saved for this user.';
-            echo '</div>';
+            $output .= '<div style="margin:50px 0;">';
+            $output .=    'No groceries saved for this user.';
+            $output .= '</div>';
         }
+
+        return $output;
     }
 
 
@@ -284,20 +291,25 @@ class CurrentList extends GroceryList
 
     /**
      * Render previously saved items to admin page
+     *
+     * @return string    Markup
      */
     public function existingAdminList()
     {
+        $output = '';
         $this->getList();
 
         if (! empty($this->groceries)) {
             foreach ($this->groceries as $item) {
                 $name = tax_ids_to_ingredients([$item['i']]);
 
-                echo '<li>';
-                    echo '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
-                    echo '<label for="' . $item['i'] . '"> ' . $name[0] . '</label>';
-                echo '</li>';
+                $output .= '<li>';
+                $output .=     '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
+                $output .=     '<label for="' . $item['i'] . '"> ' . $name[0] . '</label>';
+                $output .= '</li>';
             }
         }
+
+        return $output;
     }
 }

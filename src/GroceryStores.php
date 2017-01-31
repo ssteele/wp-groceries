@@ -324,9 +324,12 @@ class GroceryStores
 
     /**
      * Render stores in wp-admin
+     *
+     * @return string    Markup
      */
     public function showStores()
     {
+        $output = '';
         $stores = $this->getStores();
 
         if (isset($stores) && ! empty($stores)) {
@@ -339,37 +342,39 @@ class GroceryStores
             foreach ($stores as $s) {
                 $arrStoreIds[] = $s->id;
 
-                echo '<div class="list-box existing">';
-                echo '   <div class="store-mgmt">';
+                $output .= '<div class="list-box existing">';
+                $output .= '   <div class="store-mgmt">';
 
-                echo '      <span class="delete-store fa fa-times-circle-o fa-3x" id="delete_' . $s->id . '"></span>';
+                $output .= '      <span class="delete-store fa fa-times-circle-o fa-3x" id="delete_' . $s->id . '"></span>';
 
                 if ($s->id == $this->id) {
-                    echo '  <span class="favorite-store fa fa-star fa-3x" id="favorite_' . $s->id . '"></span>';
+                    $output .= '  <span class="favorite-store fa fa-star fa-3x" id="favorite_' . $s->id . '"></span>';
                 } else {
-                    echo '  <span class="favorite-store fa fa-star-o fa-3x" id="favorite_' . $s->id . '"></span>';
+                    $output .= '  <span class="favorite-store fa fa-star-o fa-3x" id="favorite_' . $s->id . '"></span>';
                 }
 
-                echo '   </div>';
-                echo '   <div class="store-input">';
+                $output .= '   </div>';
+                $output .= '   <div class="store-input">';
 
-                echo '       <select class="state-dropdown" name="state_' . $s->id . '" size="1">';
-                echo '           <option value=""></option>';
-                echo '           <option value="TX" selected="selected">TX</option>';
-                echo '       </select>';
-                echo '       <div class="clearfix"></div>';
-                echo '       <input type="text" name="name_' . $s->id . '" id="name_' . $s->id . '" class="half" placeholder="Store Name*" value="' . $s->name . '" />';
-                echo '       <input type="text" name="number_' . $s->id . '" id="number_' . $s->id . '" class="half" placeholder="Store Number" value="' . $s->number . '" />';
-                echo '       <input type="text" name="street_' . $s->id . '" id="street_' . $s->id . '" class="full" placeholder="Street" value="' . $s->street . '" />';
-                echo '       <input type="text" name="city_' . $s->id . '" id="city_' . $s->id . '" class="half" placeholder="City" value="' . $s->city . '" />';
-                echo '       <input type="text" name="zip_' . $s->id . '" id="zip_' . $s->id . '" class="half" placeholder="Zip" value="' . $s->zip . '" />';
+                $output .= '       <select class="state-dropdown" name="state_' . $s->id . '" size="1">';
+                $output .= '           <option value=""></option>';
+                $output .= '           <option value="TX" selected="selected">TX</option>';
+                $output .= '       </select>';
+                $output .= '       <div class="clearfix"></div>';
+                $output .= '       <input type="text" name="name_' . $s->id . '" id="name_' . $s->id . '" class="half" placeholder="Store Name*" value="' . $s->name . '" />';
+                $output .= '       <input type="text" name="number_' . $s->id . '" id="number_' . $s->id . '" class="half" placeholder="Store Number" value="' . $s->number . '" />';
+                $output .= '       <input type="text" name="street_' . $s->id . '" id="street_' . $s->id . '" class="full" placeholder="Street" value="' . $s->street . '" />';
+                $output .= '       <input type="text" name="city_' . $s->id . '" id="city_' . $s->id . '" class="half" placeholder="City" value="' . $s->city . '" />';
+                $output .= '       <input type="text" name="zip_' . $s->id . '" id="zip_' . $s->id . '" class="half" placeholder="Zip" value="' . $s->zip . '" />';
 
-                echo '   </div>';
-                echo '</div>';
+                $output .= '   </div>';
+                $output .= '</div>';
             }
 
             $storeIds = implode(',', $arrStoreIds);
-            echo '<input type="hidden" name="store_ids" id="store_ids" value="' . $storeIds . '" />';
+            $output .= '<input type="hidden" name="store_ids" id="store_ids" value="' . $storeIds . '" />';
+
+            return $output;
         }
     }
 
@@ -391,27 +396,33 @@ class GroceryStores
 
     /**
      * Render store dropdown to grocery list (front-end) page
+     *
+     * @return string    Markup
      */
     public function renderStoreDropdown()
     {
+        $output = '';
+
         // Get all stores
         $stores = $this->getStores();
         $this->selectStore();
 
-        echo '<div class="store-dropdown">';
+        $output .= '<div class="store-dropdown">';
 
-        echo '  <span>Saved Stores</span>';
-        echo '  <select name="user_stores" id="store_dropdown" size="1">';
+        $output .= '  <span>Saved Stores</span>';
+        $output .= '  <select name="user_stores" id="store_dropdown" size="1">';
 
         foreach ($stores as $s) {
             $selected = ($s->id == $this->id) ? ' selected="selected"' : '';
-            echo '  <option value="' . $s->id . '"' . $selected . '>' . $s->name . '</option>';
+            $output .= '  <option value="' . $s->id . '"' . $selected . '>' . $s->name . '</option>';
         }
 
-        echo '  </select>';
-        echo '</div>';
+        $output .= '  </select>';
+        $output .= '</div>';
 
-        echo '<div class="clearfix"></div>';
+        $output .= '<div class="clearfix"></div>';
+
+        return $output;
     }
 
 

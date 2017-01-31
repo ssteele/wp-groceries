@@ -277,7 +277,7 @@ add_action('admin_menu', 'register_grocery_list_admin_pages');
 function the_groceries()
 {
     $groceryStore = new GroceryStores();
-    $groceryStore->renderStoreDropdown();
+    echo $groceryStore->renderStoreDropdown();
 
     // Display current user
     echo '<div class="login">';
@@ -303,7 +303,7 @@ function the_groceries()
 
             // Get existing list items
             $currentList = new CurrentList();
-            $currentList->renderGroceries($groceryStore->id);
+            echo $currentList->renderGroceries($groceryStore->id);
 
             ?>
 
@@ -407,7 +407,7 @@ function render_grocery_list_admin_form()
 
                     <?php
                     // Get existing list items
-                    $currentList->existingAdminList();
+                    echo $currentList->existingAdminList();
                     ?>
 
                 </ul>
@@ -474,7 +474,7 @@ function render_grocery_stores_admin_form()
                 </div>
             </div>
 
-            <?php $groceryStores->showStores(); ?>
+            <?php echo $groceryStores->showStores(); ?>
 
             <div class="clearfix"></div>
 
