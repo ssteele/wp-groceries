@@ -8,6 +8,7 @@ class CurrentList extends GroceryList
     // Declare properties
     public $groceries;
     public $userId;
+    public $db;
 
 
     /**

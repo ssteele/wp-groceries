@@ -6,6 +6,8 @@ class MasterList extends GroceryList
 {
 
     // Declare properties
+    public $userId;
+    public $db;
 
 
     /**
