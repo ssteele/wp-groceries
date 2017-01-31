@@ -17,9 +17,8 @@ class MasterList extends GroceryList
      */
     protected function setList($groceries, $storeId = null)
     {
-        global $wpdb;
-        return $wpdb->update(
-            $wpdb->prefix . 'grocery_order',
+        return $this->db->update(
+            $this->db->prefix . 'grocery_order',
             [
                 'groceries' => maybe_serialize($groceries),
             ],
@@ -45,11 +44,10 @@ class MasterList extends GroceryList
      */
     public function getList($storeId = null)
     {
-        global $wpdb;
-        $table = $wpdb->prefix . 'grocery_order';
+        $table = $this->db->prefix . 'grocery_order';
 
         $query = "SELECT groceries FROM $table WHERE user_id = '$this->userId' AND store_id = '$storeId'";
-        $groceries = $wpdb->get_var($query);
+        $groceries = $this->db->get_var($query);
 
         return maybe_unserialize($groceries);
     }
@@ -137,9 +135,8 @@ class MasterList extends GroceryList
      */
     private function setNewIngredients($storeId, $newItems)
     {
-        global $wpdb;
-        $wpdb->update(
-            $wpdb->prefix . 'grocery_order',
+        $this->db->update(
+            $this->db->prefix . 'grocery_order',
             [
                 'new_items' => maybe_serialize($newItems),
             ],
@@ -165,11 +162,10 @@ class MasterList extends GroceryList
      */
     public function getNewIngredients($storeId)
     {
-        global $wpdb;
-        $table = $wpdb->prefix . 'grocery_order';
+        $table = $this->db->prefix . 'grocery_order';
 
         $query = "SELECT new_items FROM $table WHERE user_id = '$this->userId' AND store_id = '$storeId'";
-        $newItems = $wpdb->get_var($query);
+        $newItems = $this->db->get_var($query);
 
         return maybe_unserialize($newItems);
     }
@@ -242,9 +238,8 @@ class MasterList extends GroceryList
      */
     public function initializeList($groceries, $storeId)
     {
-        global $wpdb;
-        $wpdb->insert(
-            $wpdb->prefix . 'grocery_order',
+        $this->db->insert(
+            $this->db->prefix . 'grocery_order',
             [
                 'user_id'   => $this->userId,
                 'store_id'  => $storeId,

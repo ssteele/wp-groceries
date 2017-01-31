@@ -7,6 +7,7 @@ abstract class GroceryList
 
     // Declare properties
     public $userId;
+    public $db;
     public $idForGuestUse = 1;
     public $isGuest = false;
 
@@ -18,9 +19,10 @@ abstract class GroceryList
      *
      * @return void
      */
-    public function __construct($userId = null)
+    public function __construct($userId = null, $db = null)
     {
         $this->setUser($userId);
+        $this->setDb($db);
     }
 
 
@@ -42,6 +44,24 @@ abstract class GroceryList
         }
 
         $this->userId = $userId;
+    }
+
+    /**
+     * Set user
+     *
+     * @param object $db    Probably $wpdb, but open to new things
+     *
+     * @return void
+     */
+    protected function setDb($db = null)
+    {
+        if (! isset($db)) {
+            // assume wpdb
+            global $wpdb;
+            $db = $wpdb;
+        }
+
+        $this->db = $db;
     }
 
     abstract protected function setList($groceries, $storeId = null);
