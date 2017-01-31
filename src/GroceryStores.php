@@ -183,13 +183,70 @@ class GroceryStores
 
 
     /**
-     * Return user favorite
-     * @return int    Default store idendifier
+     * Verify that a store exists
+     * @return bool    True if exists; False otherwise
+     */
+    private function isExistingStore($storeId = null)
+    {
+        $stores = $this->getStores();
+        $storeIds = [];
+        foreach ($stores as $store) {
+            $storeIds[] = $store->id;
+        }
+
+        if (in_array($storeId, $storeIds)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Return favorite user store
+     * @return int    Favorite store identifier or false if not selected
+     */
+    private function getFavoriteStore()
+    {
+        $userFavoriteStoreId = get_user_meta($this->userId, '_favorite_store', true);
+        if ($userFavoriteStoreId && $this->isExistingStore($userFavoriteStoreId)) {
+            $this->id = $userFavoriteStoreId;
+            return $userFavoriteStoreId;
+        } else {
+            delete_user_meta($this->userId, '_favorite_store');
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Return favorite user store
+     * @return int    Favorite store identifier or false if not selected
+     */
+    private function getFirstStore()
+    {
+        $stores = $this->getStores();
+        if (! empty($stores) && isset($stores[0]->id)) {
+            return $stores[0]->id;
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Return default user store
+     * @return int    Default store identifier
      */
     private function getDefaultStore()
     {
-         $this->id = get_user_meta($this->userId, '_favorite_store', true);
-         return $this->id;
+        if (! $defaultStoreId = $this->getFavoriteStore()) {
+            $defaultStoreId = $this->getFirstStore();
+        }
+
+        $this->id = $defaultStoreId;
+        return $this->id;
     }
 
 
@@ -254,7 +311,7 @@ class GroceryStores
             // Select from store dropdown
             $this->id = sanitize_input($_GET['sid'], 'i');
         } else {
-            // Get user default (favorite)
+            // Get user default (favorite if selected)
             $this->getDefaultStore();
         }
     }
