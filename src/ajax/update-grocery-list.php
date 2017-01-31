@@ -11,7 +11,7 @@ $response = [
 ];
 
 // Cut off direct access
-if ('POST' !== $_SERVER['REQUEST_METHOD'] || empty($_POST['s'])) {
+if ('POST' !== $_SERVER['REQUEST_METHOD'] || empty($_POST['s']) || empty($_POST['i'])) {
     $response['status'] = 'invalid';
     echo json_encode($response);
     die();

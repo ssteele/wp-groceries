@@ -70,42 +70,63 @@ class MasterList extends GroceryList
      */
     public function updateStoreOrder($storeId, $a, $i, $b)
     {
-        $arr = $this->getList($storeId);
+        $reorderedList = $this->handleStoreItemReordering($storeId, $a, $i, $b, $this->getList($storeId));
+        return $this->setList($reorderedList, $storeId);
+    }
 
+    /**
+     * Update grocery item order for a store while shopping
+     * ...called from ajax handler
+     * @param  int $storeId   Store identifier
+     * @param  int $a         Arbitrary item ID found above dragged item's new position
+     * @param  int $i         Dragged grocery item ID
+     * @param  int $b         Grocery item ID below new dragged item's position (acts as index w/in JS lib)
+     * @param  arr $list      Master list
+     *
+     * @return arr            Reordered list
+     *
+     * ...using above:below context here, not before:after
+     *
+     */
+    public function handleStoreItemReordering($storeId, $a, $i, $b, $list = [])
+    {
         // Find 'i'
-        $keyI = array_search($i, $arr);
+        $keyI = array_search($i, $list);
 
         // Remove 'i'
-        array_splice($arr, $keyI, 1);
+        array_splice($list, $keyI, 1);
 
         if (isset($a)) {
             if (isset($b)) {
                 // Find positions of items above and below item after user sort
-                $keyA = array_search($a, $arr);
-                $keyB = array_search($b, $arr);
+                $keyA = array_search($a, $list);
+                $keyB = array_search($b, $list);
 
                 if ($i === $a || $i === $b) {
                     // Self case: $keyI === $keyB (if the item were still in the list array and $keyB was found)
                     // Put the item back where it was
-                    array_splice($arr, $keyI, 0, $i);
+                    array_splice($list, $keyI, 0, $i);
                 } else if (0 === $keyB) {
                     // Edge case: send 'i' to the front of the line
-                    array_unshift($arr, $i);
+                    array_unshift($list, $i);
                 } else if (0 === $b) {
                     // Edge case: insert i after 'a' (back of the current line)
-                    array_splice($arr, $keyA + 1, 0, $i);
+                    array_splice($list, $keyA + 1, 0, $i);
                 } else if ($keyI > $keyB) {
                     // Insert i before 'b'
-                    array_splice($arr, $keyB, 0, $i);
-                } else if ($keyI < $keyB) {
+                    array_splice($list, $keyB, 0, $i);
+                } else if ($keyI <= $keyB) {
                     // Insert i after 'a'
-                    array_splice($arr, $keyA + 1, 0, $i);
+                    array_splice($list, $keyA + 1, 0, $i);
+                } else {
+                    // If nothing else, put the item back where it was
+                    // ...this shouldn't ever be called, but is a good fallback
+                    array_splice($list, $keyI, 0, $i);
                 }
             }
         }
 
-        // Save the master list
-        return $this->setList($arr, $storeId);
+        return $list;
     }
 
 
