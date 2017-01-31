@@ -38,16 +38,8 @@ foreach ($postVars as $p) {
 // Isolate store ID
 $storeId = preg_replace('/delete_/', '', $store_id);
 
-global $wpdb;
-$status = $wpdb->delete(
-    $wpdb->prefix . 'stores',
-    [
-        'id' => $storeId,
-    ],
-    [
-        '%d',
-    ]
-);
+$groceryStores = new GroceryStores();
+$groceryStores->deleteStore($storeId);
 
 echo json_encode($response);
 die;

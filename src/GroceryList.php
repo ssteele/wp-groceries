@@ -46,8 +46,9 @@ abstract class GroceryList
         $this->userId = $userId;
     }
 
+
     /**
-     * Set user
+     * Set DB
      *
      * @param object $db    Probably $wpdb, but open to new things
      *

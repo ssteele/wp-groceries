@@ -8,6 +8,7 @@ class GroceryStores
     // Declare properties
     public $id;
     public $userId;
+    public $db;
     public $idForGuestUse = 1;
     public $isGuest = false;
 
@@ -15,10 +16,12 @@ class GroceryStores
     /**
      * Construct method
      * @param integer $userId    WP user id
+     * @param object  $db        Probably $wpdb, but open to new things
      */
-    public function __construct($userId = null)
+    public function __construct($userId = null, $db = null)
     {
         $this->setUser($userId);
+        $this->setDb($db);
     }
 
 
@@ -40,6 +43,25 @@ class GroceryStores
         }
 
         $this->userId = $userId;
+    }
+
+
+    /**
+     * Set DB
+     *
+     * @param object $db    Probably $wpdb, but open to new things
+     *
+     * @return void
+     */
+    protected function setDb($db = null)
+    {
+        if (! isset($db)) {
+            // assume wpdb
+            global $wpdb;
+            $db = $wpdb;
+        }
+
+        $this->db = $db;
     }
 
 
@@ -68,11 +90,9 @@ class GroceryStores
 
         // Name field required to save store
         if (! empty($name)) {
-            global $wpdb;
-
             if ($isNew) {
-                $wpdb->insert(
-                    $wpdb->prefix . 'stores',
+                $this->db->insert(
+                    $this->db->prefix . 'stores',
                     [
                         'user_id' => $this->userId,
                         'name'    => $name,
@@ -95,10 +115,10 @@ class GroceryStores
 
                 // Set an initial master list order for the new store
                 // ...should have a dropdown that the user can select existing store template to use here
-                $this->initializeOrderedGroceryStoreItems($this->userId, $wpdb->insert_id);
+                $this->initializeOrderedGroceryStoreItems($this->userId, $this->db->insert_id);
             } else {
-                $wpdb->update(
-                    $wpdb->prefix . 'stores',
+                $this->db->update(
+                    $this->db->prefix . 'stores',
                     [
                         'name'   => $name,
                         'number' => $number,
@@ -133,8 +153,7 @@ class GroceryStores
      */
     public function getStores()
     {
-        global $wpdb;
-        return $wpdb->get_results("SELECT * FROM wp_stores WHERE user_id = $this->userId");
+        return $this->db->get_results("SELECT * FROM wp_stores WHERE user_id = $this->userId ORDER BY id ASC");
     }
 
 
@@ -143,14 +162,13 @@ class GroceryStores
      * @param  int   $storeId    Store identifier
      * @return obj               Store object
      */
-    private function getStore($storeId)
+    private function getStore($storeId = null)
     {
         if (! $storeId) {
             return false;
         }
 
-        global $wpdb;
-        $store = $wpdb->get_results("SELECT * FROM wp_stores WHERE id = $storeId");
+        $store = $this->db->get_results("SELECT * FROM wp_stores WHERE id = $storeId");
 
         if (! empty($store)) {
             return $store[0];
@@ -183,7 +201,35 @@ class GroceryStores
 
 
     /**
+     * Handle store deletion
+     * @param  int   $storeId    Store identifier
+     *
+     * @return bool    True if deleted; False otherwise
+     */
+    public function deleteStore($storeId = null)
+    {
+        if (! $storeId) {
+            return false;
+        }
+
+        $status = $this->db->delete(
+            $this->db->prefix . 'stores',
+            [
+                'id' => $storeId,
+            ],
+            [
+                '%d',
+            ]
+        );
+
+        return $status;
+    }
+
+
+    /**
      * Verify that a store exists
+     * @param  int   $storeId    Store identifier
+     *
      * @return bool    True if exists; False otherwise
      */
     private function isExistingStore($storeId = null)
@@ -347,7 +393,7 @@ class GroceryStores
      * Retrieve/Render a store name
      * @param  int  $storeId    Store identifier
      * @param  bool $echo       If true, echo name
-     * @return str              Store name
+     * @return str              Store name or false if store does not exist
      */
     public function getStoreName($storeId, $echo = false)
     {

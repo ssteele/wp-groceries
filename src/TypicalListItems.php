@@ -6,8 +6,38 @@ class TypicalListItems
 {
 
     // Declare properties
+    public $db;
     public $termId;
     public $isTypical = 0;
+
+
+    /**
+     * Construct method
+     * @param object  $db    Probably $wpdb, but open to new things
+     */
+    public function __construct($db = null)
+    {
+        $this->setDb($db);
+    }
+
+
+    /**
+     * Set DB
+     *
+     * @param object $db    Probably $wpdb, but open to new things
+     *
+     * @return void
+     */
+    protected function setDb($db = null)
+    {
+        if (! isset($db)) {
+            // assume wpdb
+            global $wpdb;
+            $db = $wpdb;
+        }
+
+        $this->db = $db;
+    }
 
 
     /**
@@ -43,13 +73,11 @@ class TypicalListItems
      */
     private function persistTypicalListItem()
     {
-        global $wpdb;
-
         $existingRecord = $this->getTypicalListItem($this->termId);
 
         if (empty($existingRecord)) {
-            $wpdb->insert(
-                $wpdb->prefix . 'term_taxonomy_extended',
+            $this->db->insert(
+                $this->db->prefix . 'term_taxonomy_extended',
                 [
                     'term_id'           => $this->termId,
                     'typical_list_item' => $this->isTypical,
@@ -60,8 +88,8 @@ class TypicalListItems
                 ]
             );
         } else {
-            $wpdb->update(
-                $wpdb->prefix . 'term_taxonomy_extended',
+            $this->db->update(
+                $this->db->prefix . 'term_taxonomy_extended',
                 [
                     'typical_list_item' => $this->isTypical,
                 ],
@@ -103,8 +131,7 @@ class TypicalListItems
      */
     private function getTypicalListItem($termId)
     {
-        global $wpdb;
-        return $wpdb->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE term_id = $termId");
+        return $this->db->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE term_id = $termId");
     }
 
 
@@ -135,8 +162,7 @@ class TypicalListItems
      */
     private function getTypicalListItems()
     {
-        global $wpdb;
-        return $wpdb->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE typical_list_item = '1'");
+        return $this->db->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE typical_list_item = '1'");
     }
 
 
