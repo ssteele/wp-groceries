@@ -68,7 +68,7 @@ class CurrentList extends GroceryList
             $masterList = new MasterList();
             $arrMaster = $masterList->getList($storeId);
 
-            $unitMap = get_option('_ingredient_units');
+            $unitMap = get_option('_ingredient_units_to_singular_names_map');
 
             $id = 'i';
             $amount = 'a';
