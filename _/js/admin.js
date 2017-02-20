@@ -13,8 +13,10 @@ function IngredientsCtrl($scope) {
 
     $scope.addRecipeToList = function(item) {
 
-        $scope.cart.push(item);
-        $scope.search_recipe.name = null;
+        if (! $scope.isOnList(item)) {
+            $scope.cart.push(item);
+            $scope.search_recipe.name = null;
+        }
 
     };
 
