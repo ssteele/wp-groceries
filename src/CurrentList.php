@@ -35,19 +35,19 @@ class CurrentList extends GroceryList
         $srlGroceries = get_user_meta($this->userId, '_grocery_list', true);
 
         if (is_null($storeId)) {
-            $this->groceries = maybe_unserialize($srlGroceries);
+            $groceries = maybe_unserialize($srlGroceries);
         } else {
             $masterList = new MasterList();
             $masterStoreList = $masterList->getList($storeId);
 
-            $this->groceries = maybe_unserialize($srlGroceries);
+            $groceries = maybe_unserialize($srlGroceries);
 
-            if (is_array($this->groceries)) {
-                usort($this->groceries, [new SortList($masterStoreList), 'sort']);
+            if (is_array($groceries)) {
+                usort($groceries, [new SortList($masterStoreList), 'sort']);
             }
         }
 
-        return $this->groceries;
+        return $groceries;
     }
 
 
@@ -61,9 +61,9 @@ class CurrentList extends GroceryList
     {
         $output = '';
 
-        $this->getList($storeId);
+        $groceries = $this->getList($storeId);
 
-        if (! empty($this->groceries)) {
+        if (! empty($groceries)) {
             // Grab the user master list for this store
             $masterList = new MasterList();
             $arrMaster = $masterList->getList($storeId);
@@ -88,7 +88,7 @@ class CurrentList extends GroceryList
             // Flag optional ingredients so the legend will show only when necessary
             $optionalFlag = false;
 
-            foreach ($this->groceries as $item) {
+            foreach ($groceries as $item) {
                 // Make sure the item is represented in the master store list
                 if (! in_array($item[$id], $arrMaster)) {
                     // Not in the master list - prepend it
@@ -293,27 +293,40 @@ class CurrentList extends GroceryList
 
 
     /**
-     * Render previously saved items to admin page
+     * Render previously saved grocery items to admin page
+     * @param  array  $groceries    Grocery items
+     *
+     * @return string               Markup
+     */
+    public function renderExistingAdminList($groceries = [])
+    {
+        $output = '';
+
+        $ingredients = new Ingredients();
+        if (! empty($groceries)) {
+            foreach ($groceries as $item) {
+                $name = $ingredients->fromTaxIds([$item['i']]);
+                if ($name = array_shift($name)) {
+                    $output .= '<li>';
+                    $output .=     '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
+                    $output .=     '<label for="' . $item['i'] . '"> ' . $name . '</label>';
+                    $output .= '</li>';
+                }
+            }
+        }
+
+        return $output;
+    }
+
+
+    /**
+     * Render previously saved grocery items to admin page (wrapper)
      *
      * @return string    Markup
      */
     public function existingAdminList()
     {
-        $output = '';
-        $this->getList();
-
-        $ingredients = new Ingredients();
-        if (! empty($this->groceries)) {
-            foreach ($this->groceries as $item) {
-                $name = $ingredients->fromTaxIds([$item['i']]);
-
-                $output .= '<li>';
-                $output .=     '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
-                $output .=     '<label for="' . $item['i'] . '"> ' . $name[0] . '</label>';
-                $output .= '</li>';
-            }
-        }
-
-        return $output;
+        $groceries = $this->getList();
+        return $this->renderExistingAdminList($groceries);
     }
 }
