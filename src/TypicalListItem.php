@@ -2,7 +2,7 @@
 
 namespace SteveSteele\Groceries;
 
-class TypicalListItems
+class TypicalListItem
 {
 
     // Declare properties
@@ -71,9 +71,9 @@ class TypicalListItems
      *
      * @return void
      */
-    private function persistTypicalListItem()
+    private function persist()
     {
-        $existingRecord = $this->getTypicalListItem($this->termId);
+        $existingRecord = $this->get($this->termId);
 
         if (empty($existingRecord)) {
             $this->db->insert(
@@ -114,11 +114,11 @@ class TypicalListItems
      *
      * @return void
      */
-    public function saveTypicalListItem($termId, $isTypical = 0)
+    public function save($termId, $isTypical = 0)
     {
         $this->setTermId($termId);
         $this->setIsTypical($isTypical);
-        $this->persistTypicalListItem();
+        $this->persist();
     }
 
 
@@ -129,9 +129,27 @@ class TypicalListItems
      *
      * @return array              Filled with extended taxonomy objects
      */
-    private function getTypicalListItem($termId)
+    private function get($termId)
     {
         return $this->db->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE term_id = $termId");
+    }
+
+
+    /**
+     * Get typical list item status (wrapper)
+     *
+     * @param  arr $isTypical    Filled with extended taxonomy objects
+     *
+     * @return str               1 if item is typical, 0 otherwise
+     */
+    public function fetchStatus($isTypical)
+    {
+        $status = '0';
+        if (! empty($isTypical)) {
+            $item = reset($isTypical);
+            $status = $item->typical_list_item;
+        }
+        return $status;
     }
 
 
@@ -142,16 +160,10 @@ class TypicalListItems
      *
      * @return string             1 if item is typical, 0 otherwise
      */
-    public function getTypicalListItemStatus($termId)
+    public function getStatus($termId)
     {
-        $isTypical = $this->getTypicalListItem($termId);
-
-        $status = '0';
-        if (! empty($isTypical)) {
-            $item = reset($isTypical);
-            $status = $item->typicalListItem;
-        }
-        return $status;
+        $isTypical = $this->get($termId);
+        return $this->fetchStatus($isTypical);
     }
 
 
@@ -160,7 +172,7 @@ class TypicalListItems
      *
      * @return array    Extended taxonomy objects
      */
-    private function getTypicalListItems()
+    private function all()
     {
         return $this->db->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE typical_list_item = '1'");
     }
@@ -171,9 +183,9 @@ class TypicalListItems
      *
      * @return array    Taxonomy IDs
      */
-    public function getTypicalListItemIds()
+    public function getIds()
     {
-        $typicalItems = $this->getTypicalListItems();
+        $typicalItems = $this->all();
 
         $typicalItemIds = [];
         foreach ($typicalItems as $item) {

@@ -11,7 +11,7 @@ To turn this into an actual WP plugin, all of the javascript that pertains to th
 
 */
 
-use SteveSteele\Groceries\TypicalListItems;
+use SteveSteele\Groceries\TypicalListItem;
 use SteveSteele\Groceries\GroceryStore;
 use SteveSteele\Groceries\CurrentList;
 
@@ -139,8 +139,8 @@ function save_typical_list_item_status($termId = null)
 {
     if ($termId) {
         $isTypical = isset($_POST['is_typical']) ? $_POST['is_typical'] : 0;
-        $typicalListItems = new TypicalListItems();
-        $typicalListItems->saveTypicalListItem($termId, $isTypical);
+        $typicalListItem = new TypicalListItem();
+        $typicalListItem->save($termId, $isTypical);
     }
 }
 
@@ -154,8 +154,8 @@ function save_typical_list_item_status($termId = null)
  */
 function get_typical_list_item_status($termId)
 {
-    $typicalListItems = new TypicalListItems();
-    return $typicalListItems->getTypicalListItemStatus($termId);
+    $typicalListItem = new TypicalListItem();
+    return $typicalListItem->getStatus($termId);
 }
 
 
@@ -166,8 +166,8 @@ function get_typical_list_item_status($termId)
  */
 function get_typical_list_item_ids()
 {
-    $typicalListItems = new TypicalListItems();
-    return $typicalListItems->getTypicalListItemIds();
+    $typicalListItem = new TypicalListItem();
+    return $typicalListItem->getIds();
 }
 
 
