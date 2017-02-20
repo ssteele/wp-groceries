@@ -16,6 +16,7 @@ abstract class GroceryList
      * Construct method
      *
      * @param integer $userId    WP user id
+     * @param object  $db        Probably $wpdb, but open to new things
      *
      * @return void
      */
@@ -65,6 +66,21 @@ abstract class GroceryList
         $this->db = $db;
     }
 
+
+    /**
+     * Save current user grocery list to the DB
+     * @param  array $groceries    Grocery list items
+     * @param  int   $storeId      Store identifier
+     */
     abstract protected function setList($groceries, $storeId = null);
+
+
+    /**
+     * Retrieve grocery list from the DB
+     * Sort items by aisle if store specified
+     * @param  int   $storeId     Store identifier
+     *
+     * @return array              Grocery list items
+     */
     abstract protected function getList($storeId = null);
 }
