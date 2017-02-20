@@ -180,18 +180,29 @@ class TypicalListItem
 
     /**
      * Fetch typical list item IDs from the DB
+     * @param  array    Extended taxonomy objects
      *
      * @return array    Taxonomy IDs
      */
-    public function getIds()
+    public function fetchIds($typicalItems = [])
     {
-        $typicalItems = $this->all();
-
         $typicalItemIds = [];
         foreach ($typicalItems as $item) {
             $typicalItemIds[] = $item->term_id;
         }
 
         return $typicalItemIds;
+    }
+
+
+    /**
+     * Get typical list item IDs from the DB
+     *
+     * @return array    Taxonomy IDs
+     */
+    public function getIds()
+    {
+        $typicalItems = $this->all();
+        return $this->fetchIds($typicalItems);
     }
 }
