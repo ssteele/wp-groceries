@@ -77,7 +77,7 @@ class GroceryStore
         $isNew = is_null($storeId) ? true : false;
 
         // Handle user input
-        $postVars = ['name', 'number', 'street', 'city', 'state', 'zip'];
+        $postVars = ['name', 'number', 'street', 'city', 'zip'];
 
         foreach ($postVars as $p) {
             $var = ($isNew) ? $p : $p . '_' . $storeId;
@@ -100,12 +100,10 @@ class GroceryStore
                         'number'  => $number,
                         'street'  => $street,
                         'city'    => $city,
-                        'state'   => $state,
                         'zip'     => $zip,
                     ],
                     [
                         '%d',
-                        '%s',
                         '%s',
                         '%s',
                         '%s',
@@ -125,14 +123,12 @@ class GroceryStore
                         'number' => $number,
                         'street' => $street,
                         'city'   => $city,
-                        'state'  => $state,
                         'zip'    => $zip,
                     ],
                     [
                         'id' => $storeId,
                     ],
                     [
-                        '%s',
                         '%s',
                         '%s',
                         '%s',
@@ -372,18 +368,12 @@ class GroceryStore
 
                 $output .= '   </div>';
                 $output .= '   <div class="store-input">';
-
-                $output .= '       <select class="state-dropdown" name="state_' . $s->id . '" size="1">';
-                $output .= '           <option value=""></option>';
-                $output .= '           <option value="TX" selected="selected">TX</option>';
-                $output .= '       </select>';
                 $output .= '       <div class="clearfix"></div>';
                 $output .= '       <input type="text" name="name_' . $s->id . '" id="name_' . $s->id . '" class="half" placeholder="Store Name*" value="' . $s->name . '" />';
                 $output .= '       <input type="text" name="number_' . $s->id . '" id="number_' . $s->id . '" class="half" placeholder="Store Number" value="' . $s->number . '" />';
                 $output .= '       <input type="text" name="street_' . $s->id . '" id="street_' . $s->id . '" class="full" placeholder="Street" value="' . $s->street . '" />';
                 $output .= '       <input type="text" name="city_' . $s->id . '" id="city_' . $s->id . '" class="half" placeholder="City" value="' . $s->city . '" />';
                 $output .= '       <input type="text" name="zip_' . $s->id . '" id="zip_' . $s->id . '" class="half" placeholder="Zip" value="' . $s->zip . '" />';
-
                 $output .= '   </div>';
                 $output .= '</div>';
             }

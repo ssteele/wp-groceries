@@ -1,0 +1,199 @@
+@import "_config";
+
+
+
+/* Base: element selectors [body, p, a]
+...............................................................................*/
+
+
+
+/* Layout: general page sections [#article, #sidebar]
+...............................................................................*/
+
+.clearfix:after {
+    content:" ";
+    visibility:hidden;
+    display:block;
+    height:0;
+    clear:both;
+}
+
+.hr {
+    border-bottom:1px solid $bd_main;
+}
+
+.grocery-list,
+.grocery-stores {
+
+    .list-box {
+        margin:25px 1.5% 0;
+        padding:0.5% 1% 1%;
+        width:45%;
+        background-color:$bg_desert;
+        border-radius:10px;
+    }
+
+    .select,
+    .new {
+        float:left;
+    }
+
+    .select {
+        margin:25px 1.5%;
+        width:47%;
+    }
+
+    .new {
+        background-color:$bg_appetizer;
+    }
+
+}
+
+.grocery-list {
+
+    .new {
+        margin-right:0;
+        position:absolute;
+        right:3%;
+    }
+
+    .existing {
+        clear:both;
+    }
+}
+
+.grocery-stores {
+
+    .new {
+
+        .store-input {
+            margin-top:38px;
+        }
+    }
+
+    .existing {
+        float:left;
+    }
+
+    .store-mgmt {
+
+        .favorite-store,
+        .delete-store {
+            float:right;
+            height:33px;
+            width:33px;
+            margin:5px 0 10px 10px;
+            cursor:pointer;
+        }
+
+        .delete-store {
+            margin-right:5px;
+        }
+
+        .fa-star-o {
+            color:$shadow;
+        }
+
+        .fa-star {
+            color:$bg_yellow;
+            -webkit-text-stroke-width:3px;
+            -webkit-text-stroke-color:$shadow;
+        }
+    }
+
+    .store-input {
+        padding:10px;
+
+        input {
+            margin:0 0 10px;
+        }
+
+        .full {
+            width:98.5%;
+        }
+
+        .half {
+            width:49%;
+        }
+
+        .third {
+            width:30%;
+        }
+    }
+}
+
+
+
+/* Modules: reusable parts w/in layout (avoid element selectors) [.events, .events-constrained]
+...............................................................................*/
+
+.grocery-list input.search {
+    width:100%;
+    height:32px;
+    padding:10px;
+    font-size:14px;
+}
+
+.dropdown-container {
+    width:100%;
+    max-height:300px;
+    margin-bottom:25px;
+    overflow:auto;
+}
+
+.filtered-dropdown {
+    display:none;
+    margin:0;
+
+    li {
+        margin:0;
+        padding:10px;
+        list-style-type:none;
+        background-color:#eee;
+        border-left:1px solid #ccc;
+        border-right:1px solid #ccc;
+        border-bottom:1px solid #ccc;
+        cursor:pointer;
+
+        &:hover,
+        &:focus {
+            background-color:#fffbcc;
+        }
+
+        &:first-child {
+            border-top:1px solid #ccc;
+        }
+    }
+}
+
+.submit {
+    width:250px;
+}
+
+#grocery-list-footer {
+    margin-top: 25px;
+    position:relative;
+
+    .current-list {
+        // position:absolute;
+        // right:20px;
+        // width:30%;
+    }
+}
+
+
+
+/* State: interaction [.is-error, .is-events-active]
+...............................................................................*/
+
+
+
+/* Media queries
+...............................................................................*/
+
+
+
+/* Shame
+...............................................................................*/
+
+

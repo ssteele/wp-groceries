@@ -412,14 +412,11 @@ function render_grocery_list_admin_form()
 
             <div class="clearfix"></div>
 
-            <div class="hr"></div>
-
             <div id="grocery-list-footer">
-                <p class="current-list">The current list can be found <a href="<?php echo site_url(); ?>/grocery-list/">here</a></p>
-
                 <p class="submit">
                     <input type="submit" name="submit" class="button-primary" value="Save Grocery List" />
                 </p>
+                <p class="current-list">The current list can be found <a href="<?php echo site_url(); ?>/grocery-list/">here</a></p>
             </div>
 
         </form>
@@ -457,11 +454,6 @@ function render_grocery_stores_admin_form()
 
             <div class="list-box new">
                 <div class="store-input">
-                    <select class="state-dropdown" name="state" size="1">
-                        <option value=""></option>
-                        <option value="TX" selected="selected">TX</option>
-                    </select>
-                    <div class="clearfix"></div>
                     <input type="text" name="name" id="name" class="half" placeholder="Store Name*" />
                     <input type="text" name="number" id="number" class="half" placeholder="Store Number" />
                     <input type="text" name="street" id="street" class="full" placeholder="Street" />
@@ -473,8 +465,6 @@ function render_grocery_stores_admin_form()
             <?php echo $groceryStore->showStores(); ?>
 
             <div class="clearfix"></div>
-
-            <div class="hr"></div>
 
             <div id="grocery-list-footer">
                 <p class="submit">
