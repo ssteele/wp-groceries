@@ -71,12 +71,6 @@ class CurrentList extends GroceryList
 
             $unitMap = get_option('_ingredient_units_to_singular_names_map');
 
-            $id = 'i';
-            $amount = 'a';
-            $unit = 'u';
-            $optional = 'o';
-            $pic = 'p';
-
             // Get user store dropdown selection
             $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . $sanitizer->sanitize($_GET['sid']) : '';
 
@@ -91,39 +85,39 @@ class CurrentList extends GroceryList
 
             foreach ($groceries as $item) {
                 // Make sure the item is represented in the master store list
-                if (! in_array($item[$id], $arrMaster)) {
+                if (! in_array($item[$ingredientTranslator->id], $arrMaster)) {
                     // Not in the master list - prepend it
-                    $masterList->insertNewIngredient($storeId, $item[$id]);
+                    $masterList->insertNewIngredient($storeId, $item[$ingredientTranslator->id]);
                     $refreshAlert = true;
                 }
 
                 // Prepend any item description (usually 'organic')
-                $desc = term_description($item[$id], 'ingredient');
-                $name = $ingredientTranslator->fromTaxIds([$item[$id]]);
-                $unitName = $ingredientTranslator->indexToUnitName($item[$unit]);
+                $desc = term_description($item[$ingredientTranslator->id], 'ingredient');
+                $name = $ingredientTranslator->fromTaxIds([$item[$ingredientTranslator->id]]);
+                $unitName = $ingredientTranslator->indexToUnitName($item[$ingredientTranslator->unit]);
 
                 // Get single units where necessary
-                if (! stristr($item[$amount], 'to') && ($item[$amount] != 0 && $item[$amount] <= 1)) {
+                if (! stristr($item[$ingredientTranslator->amount], 'to') && ($item[$ingredientTranslator->amount] != 0 && $item[$ingredientTranslator->amount] <= 1)) {
                     $unitName = $unitMap[$unitName];
                 }
 
                 // Get recipe thumbnail
-                $thumb = (isset($item[$pic]) && ! empty($item[$pic])) ? $item[$pic] . ' ' : '';
+                $thumb = (isset($item[$ingredientTranslator->pic]) && ! empty($item[$ingredientTranslator->pic])) ? $item[$ingredientTranslator->pic] . ' ' : '';
 
-                $optionalFlag = ('*' === $item[$optional]) ? true : $optionalFlag;
+                $optionalFlag = ('*' === $item[$ingredientTranslator->optional]) ? true : $optionalFlag;
 
                 // Build the list item
                 $li  = '';
                 $li .= $thumb;
-                $li .= (isset($item[$amount]) && ! empty($item[$amount])) ? $item[$amount] . ' ' : '';
+                $li .= (isset($item[$ingredientTranslator->amount]) && ! empty($item[$ingredientTranslator->amount])) ? $item[$ingredientTranslator->amount] . ' ' : '';
                 $li .= (isset($unitName) && ! empty($unitName)) ? $unitName . ' ' : '';
                 $li .= (isset($desc) && ! empty($desc)) ? strip_tags($desc) . ' ' : '';
-                $li .= $name[0] . $item[$optional] . ' ';
+                $li .= $name[0] . $item[$ingredientTranslator->optional] . ' ';
 
                 // Build necessary classes
                 $liClass = [];
 
-                if (isset($arrNewbies) && is_array($arrNewbies) && in_array($item[$id], $arrNewbies)) {
+                if (isset($arrNewbies) && is_array($arrNewbies) && in_array($item[$ingredientTranslator->id], $arrNewbies)) {
                     $liClass[] = 'new-item';
                 }
 
@@ -133,7 +127,7 @@ class CurrentList extends GroceryList
 
                 $liClasses = implode(' ', $liClass);
 
-                $output .= '<li id="' . $item[$id] . '" class="' . $liClasses . '">';
+                $output .= '<li id="' . $item[$ingredientTranslator->id] . '" class="' . $liClasses . '">';
                 $output .=    $li;
                 $output .= '</li>';
 
