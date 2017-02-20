@@ -53,11 +53,12 @@ class CurrentList extends GroceryList
 
     /**
      * Render the contents of the 'grocery_list' page
-     * @param  int $storeId    Store identifier
+     * @param  int                    $storeId       Store identifier
+     * @param  \SteveSteele\Sanitizer $sanitizer     Dedicated input sanitization object
      *
-     * @return string          Markup
+     * @return string                                Markup
      */
-    public function renderGroceries($storeId)
+    public function renderGroceries($storeId, \SteveSteele\Sanitizer $sanitizer)
     {
         $output = '';
 
@@ -77,7 +78,7 @@ class CurrentList extends GroceryList
             $pic = 'p';
 
             // Get user store dropdown selection
-            $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . sanitize_input($_GET['sid']) : '';
+            $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . $sanitizer->sanitize($_GET['sid']) : '';
 
             $refreshAlert = false;
             $output .= '<a href="' . site_url() . '/grocery-list/' . $userSelectedStoreUrl . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
@@ -161,9 +162,12 @@ class CurrentList extends GroceryList
 
     /**
      * Save groceries submitted via 'grocery-list' admin page
-     * @return boolean    True if new ingredient added (to alert admin user to refresh the page before creating a new list)
+     * @param  array                  $post          Raw form post
+     * @param  \SteveSteele\Sanitizer $sanitizer     Dedicated input sanitization object
+     *
+     * @return boolean                               True if new ingredient added (to alert admin user to refresh the page before creating a new list)
      */
-    public function saveGroceries()
+    public function saveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
     {
         // Declare list array
         $arrItems = [];
@@ -182,12 +186,12 @@ class CurrentList extends GroceryList
             $$cat = [];
 
             // Bail if nothing to fill
-            if (empty($_POST[$cat])) {
+            if (empty($post[$cat])) {
                 continue;
             }
 
-            foreach ($_POST[$cat] as $item) {
-                array_push($$cat, sanitize_input($item, $type));
+            foreach ($post[$cat] as $item) {
+                array_push($$cat, $sanitizer->sanitize($item, $type));
             }
 
         }
@@ -196,7 +200,7 @@ class CurrentList extends GroceryList
         $ingredient = array_merge($i, $ingredient);
 
         // Merge in typical items with ingredients if toggled
-        if (isset($_POST['typical_items_toggle'])) {
+        if (isset($post['typical_items_toggle'])) {
             $typicalItems = get_typical_list_item_ids($this->userId);
             $ingredient = array_unique(array_merge($typicalItems, $ingredient));
         }

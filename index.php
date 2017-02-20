@@ -14,6 +14,7 @@ To turn this into an actual WP plugin, all of the javascript that pertains to th
 use SteveSteele\Groceries\TypicalListItem;
 use SteveSteele\Groceries\GroceryStore;
 use SteveSteele\Groceries\CurrentList;
+use SteveSteele\Sanitizer;
 
 require_once 'vendor/autoload.php';
 
@@ -252,7 +253,8 @@ function the_groceries()
 
                 // Get existing list items
                 $currentList = new CurrentList();
-                echo $currentList->renderGroceries($groceryStore->id);
+                $sanitizer = new Sanitizer();
+                echo $currentList->renderGroceries($groceryStore->id, $sanitizer);
 
                 ?>
 
@@ -282,7 +284,8 @@ function render_grocery_list_admin_form()
     $currentList = new CurrentList();
 
     if (isset($_POST['submit'])) {
-        $isNewIngredient = $currentList->saveGroceries();
+        $sanitizer = new Sanitizer();
+        $isNewIngredient = $currentList->saveGroceries($_POST, $sanitizer);
 
         ?>
 
