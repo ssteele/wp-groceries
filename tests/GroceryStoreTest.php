@@ -101,4 +101,28 @@ class GroceryStoreTest extends \PHPUnit_Framework_TestCase
         $returned = $groceryStore->getFirstStore($stores);
         $this->assertEquals($expected, $returned);
     }
+
+    public function testPullStoreName()
+    {
+        // setup
+        $userId = 1;
+        $groceryStore = new GroceryStore($userId);
+
+        $store = [
+                'id' => '16',
+                'user_id' => '1',
+                'name' => 'Lorem Ipsum',
+                'number' => '90210',
+                'street' => '123 Blah Blah',
+                'city' => 'Austin',
+                'state' => 'TX',
+                'zip' => '78753',
+        ];
+        $store = (object) $store;
+
+        // expected first store is returned
+        $expected = 'Lorem Ipsum';
+        $returned = $groceryStore->pullStoreName($store);
+        $this->assertEquals($expected, $returned);
+    }
 }

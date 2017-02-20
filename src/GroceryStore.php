@@ -433,14 +433,12 @@ class GroceryStore
 
     /**
      * Retrieve/Render a store name
-     * @param  int  $storeId    Store identifier
+     * @param  obj  $store      Store
      * @param  bool $echo       If true, echo name
      * @return str              Store name or false if store does not exist
      */
-    public function getStoreName($storeId, $echo = false)
+    public function pullStoreName($store, $echo = false)
     {
-        $store = $this->getStore($storeId);
-
         if (! $store) {
             return false;
         }
@@ -452,6 +450,19 @@ class GroceryStore
         }
 
         return $name;
+    }
+
+
+    /**
+     * Retrieve/Render a store name (wrapper)
+     * @param  int  $storeId    Store identifier
+     * @param  bool $echo       If true, echo name
+     * @return str              Store name or false if store does not exist
+     */
+    public function getStoreName($storeId, $echo = false)
+    {
+        $store = $this->getStore($storeId);
+        return $this->pullStoreName($store, $echo);
     }
 
 
