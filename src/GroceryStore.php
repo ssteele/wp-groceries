@@ -437,7 +437,7 @@ class GroceryStore
      * @param  bool $echo       If true, echo name
      * @return str              Store name or false if store does not exist
      */
-    public function pullStoreName($store, $echo = false)
+    public function fetchStoreName($store, $echo = false)
     {
         if (! $store) {
             return false;
@@ -462,7 +462,7 @@ class GroceryStore
     public function getStoreName($storeId, $echo = false)
     {
         $store = $this->getStore($storeId);
-        return $this->pullStoreName($store, $echo);
+        return $this->fetchStoreName($store, $echo);
     }
 
 

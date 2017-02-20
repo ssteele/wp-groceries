@@ -122,7 +122,7 @@ class GroceryStoreTest extends \PHPUnit_Framework_TestCase
 
         // expected first store is returned
         $expected = 'Lorem Ipsum';
-        $returned = $groceryStore->pullStoreName($store);
+        $returned = $groceryStore->fetchStoreName($store);
         $this->assertEquals($expected, $returned);
     }
 }
