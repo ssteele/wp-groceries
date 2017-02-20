@@ -17,6 +17,9 @@ use SteveSteele\Groceries\CurrentList;
 
 require_once 'vendor/autoload.php';
 
+// previously 'manage_options'
+const GROCERY_LIST_CAPABILITY = 'read';                             // https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
+
 
 /**
  * Install the plugin and create a DB table
@@ -180,7 +183,7 @@ function register_grocery_list_admin_pages()
         'edit.php?post_type=recipe',
         'Manage Grocery Stores',
         'Grocery Stores',
-        'manage_options',
+        GROCERY_LIST_CAPABILITY,
         'grocery-stores',
         'render_grocery_stores_admin_form'
     );
@@ -189,7 +192,7 @@ function register_grocery_list_admin_pages()
         'edit.php?post_type=recipe',
         'Create a Grocery List',
         'Grocery List',
-        'manage_options',
+        GROCERY_LIST_CAPABILITY,
         'grocery-list',
         'render_grocery_list_admin_form'
     );
@@ -252,7 +255,7 @@ function the_groceries()
  */
 function render_grocery_list_admin_form()
 {
-    if (! current_user_can('manage_options')) {
+    if (! current_user_can(GROCERY_LIST_CAPABILITY)) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
 
@@ -372,7 +375,7 @@ function render_grocery_list_admin_form()
  */
 function render_grocery_stores_admin_form()
 {
-    if (! current_user_can('manage_options')) {
+    if (! current_user_can(GROCERY_LIST_CAPABILITY)) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
 
