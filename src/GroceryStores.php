@@ -536,7 +536,8 @@ class GroceryStores
         ];
 
         // Translate names to ingredient taxonomy IDs
-        $initialList = ingredients_to_tax_ids($readableList);
+        $ingredients = new Ingredients();
+        $initialList = $ingredients->toTaxIds($readableList);
 
         $masterList = new MasterList();
         $masterList->initializeList($initialList, $storeId);

@@ -83,6 +83,7 @@ class CurrentList extends GroceryList
             $output .= '<a href="' . site_url() . '/grocery-list/' . $userSelectedStoreUrl . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
 
             $arrNewbies = $masterList->getNewIngredients($storeId);
+            $ingredients = new Ingredients();
 
             // Flag optional ingredients so the legend will show only when necessary
             $optionalFlag = false;
@@ -97,8 +98,8 @@ class CurrentList extends GroceryList
 
                 // Prepend any item description (usually 'organic')
                 $desc = term_description($item[$id], 'ingredient');
-                $name = tax_ids_to_ingredients([$item[$id]]);
-                $unitName = unit_index_to_name($item[$unit]);
+                $name = $ingredients->fromTaxIds([$item[$id]]);
+                $unitName = $ingredients->unitIndexToName($item[$unit]);
 
                 // Get single units where necessary
                 if (! stristr($item[$amount], 'to') && ($item[$amount] != 0 && $item[$amount] <= 1)) {
@@ -200,6 +201,8 @@ class CurrentList extends GroceryList
             $ingredient = array_unique(array_merge($typicalItems, $ingredient));
         }
 
+        $ingredients = new Ingredients();
+
         $id = 'i';
         $amount = 'a';
         $unit = 'u';
@@ -225,7 +228,7 @@ class CurrentList extends GroceryList
                         $meta = maybe_unserialize($serializedMeta);
 
                         // Translate unit into unit index
-                        $metaUnit = unit_name_to_index($meta['unit']);
+                        $metaUnit = $ingredients->unitNameToIndex($meta['unit']);
 
                         // Flag for optional ingredients
                         $isOptional = preg_match('/\(optional\)/', $meta['prep']);
@@ -299,9 +302,10 @@ class CurrentList extends GroceryList
         $output = '';
         $this->getList();
 
+        $ingredients = new Ingredients();
         if (! empty($this->groceries)) {
             foreach ($this->groceries as $item) {
-                $name = tax_ids_to_ingredients([$item['i']]);
+                $name = $ingredients->fromTaxIds([$item['i']]);
 
                 $output .= '<li>';
                 $output .=     '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
