@@ -296,19 +296,20 @@ class CurrentList extends GroceryList
             foreach ($newIngredients as $newIngredient) {
                 if (! empty($newIngredient)) {
                     // Add the new ingredient to our list of terms
-                    // @TODO: need to check permissions here
-                    $termId = wp_insert_term($newIngredient, 'ingredient');
-                    $this->isNewIngredient = true;
+                    if (user_can($this->userId, INGREDIENT_TAG_CREATE_CAPABILITY)) {
+                        $termId = wp_insert_term($newIngredient, 'ingredient');
+                        $this->isNewIngredient = true;
 
-                    if (! empty($termId) && is_array($termId)) {
-                        $this->groceries[] = [
-                            $ingredientTranslator->id       => $termId['term_id'],
-                            $ingredientTranslator->amount   => '',
-                            $ingredientTranslator->unit     => false,
-                            $ingredientTranslator->type     => 'i',
-                            $ingredientTranslator->optional => '',
-                            $ingredientTranslator->pic      => '',
-                        ];
+                        if (! empty($termId) && is_array($termId)) {
+                            $this->groceries[] = [
+                                $ingredientTranslator->id       => $termId['term_id'],
+                                $ingredientTranslator->amount   => '',
+                                $ingredientTranslator->unit     => false,
+                                $ingredientTranslator->type     => 'i',
+                                $ingredientTranslator->optional => '',
+                                $ingredientTranslator->pic      => '',
+                            ];
+                        }
                     }
                 }
             }

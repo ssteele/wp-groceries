@@ -18,8 +18,9 @@ use SteveSteele\Sanitizer;
 
 require_once 'vendor/autoload.php';
 
-// previously 'manage_options'
-const GROCERY_LIST_CAPABILITY = 'read';                             // https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
+// https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
+const GROCERY_LIST_CAPABILITY = 'read';                             // everyone can, no one cannot (previously 'manage_options')
+const INGREDIENT_TAG_CREATE_CAPABILITY = 'manage_categories';       // editor's can, authors cannot
 
 
 /**
@@ -351,7 +352,7 @@ function render_grocery_list_admin_form()
 
             <div class="list-box existing">
 
-            <?php if (current_user_can('manage_categories')) { ?>
+            <?php if (current_user_can(INGREDIENT_TAG_CREATE_CAPABILITY)) { ?>
                     <h3>
                         <input type="checkbox" id="typical_items_toggle" name="typical_items_toggle" value="1" />
                         <label for="typical_items_toggle">Typical items</label>
