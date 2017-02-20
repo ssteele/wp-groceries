@@ -83,7 +83,7 @@ class GroceryStore
             $var = ($isNew) ? $p : $p . '_' . $storeId;
 
             if (isset($_POST[$var]) && ! empty($_POST[$var])) {
-                $$p = sanitize_input($_POST[$var], 's');
+                $$p = shsSanitize($_POST[$var], 's');
             } else {
                 $$p = '';
             }
@@ -205,7 +205,7 @@ class GroceryStore
         // Save existing store modifications
         if (! empty($arrStoreIds)) {
             foreach ($arrStoreIds as $id) {
-                $storeId = sanitize_input($id, 'i');
+                $storeId = shsSanitize($id, 'i');
                 $this->setStore($storeId);
             }
         }
@@ -403,7 +403,7 @@ class GroceryStore
     {
         if (isset($_GET['sid']) && ! empty($_GET['sid'])) {
             // Select from store dropdown
-            $this->id = sanitize_input($_GET['sid'], 'i');
+            $this->id = shsSanitize($_GET['sid'], 'i');
         } else {
             // Get user default (favorite if selected)
             $stores = $this->getStores();

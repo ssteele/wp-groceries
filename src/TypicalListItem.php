@@ -73,7 +73,7 @@ class TypicalListItem
      */
     private function setTermId($termId)
     {
-        $this->termId = sanitize_input($termId, 'i');
+        $this->termId = shsSanitize($termId, 'i');
     }
 
 
@@ -86,7 +86,7 @@ class TypicalListItem
      */
     private function setIsTypical($isTypical = 0)
     {
-        $this->isTypical = sanitize_input($isTypical, 'i');
+        $this->isTypical = shsSanitize($isTypical, 'i');
     }
 
 

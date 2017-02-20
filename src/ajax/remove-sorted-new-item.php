@@ -32,7 +32,7 @@ if (! user_can($userId, GROCERY_LIST_CAPABILITY)) {
 $postVars = ['s', 'i'];
 
 foreach ($postVars as $p) {
-    $$p = sanitize_input($_POST[$p], 's');
+    $$p = shsSanitize($_POST[$p], 's');
     $$p = (is_string($$p)) ? intval($$p) : $$p;
 }
 
