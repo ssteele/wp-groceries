@@ -110,7 +110,7 @@ class CurrentList extends GroceryList
                 // Get recipe thumbnail
                 $thumb = (isset($item[$pic]) && ! empty($item[$pic])) ? $item[$pic] . ' ' : '';
 
-                $optionalFlag = ('' !== $item[$optional]) ? true : $optionalFlag;
+                $optionalFlag = ('*' === $item[$optional]) ? true : $optionalFlag;
 
                 // Build the list item
                 $li  = '';
