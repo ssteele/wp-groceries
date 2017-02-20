@@ -140,9 +140,9 @@ add_shortcode('groceries', 'grocery_list_shortcode');
  *
  * @return void
  */
-function save_typical_list_item_status($userId, $termId = null)
+function save_typical_list_item_status($userId = null, $termId = null)
 {
-    if ($termId) {
+    if ($userId && $termId) {
         $isTypical = isset($_POST['is_typical']) ? $_POST['is_typical'] : 0;
         $typicalListItem = new TypicalListItem($userId);
         $typicalListItem->save($termId, $isTypical);
@@ -158,10 +158,12 @@ function save_typical_list_item_status($userId, $termId = null)
  *
  * @return string            1 if item is typical, 0 otherwise
  */
-function get_typical_list_item_status($userId, $termId)
+function get_typical_list_item_status($userId = null, $termId = null)
 {
-    $typicalListItem = new TypicalListItem($userId);
-    return $typicalListItem->getStatus($userId, $termId);
+    if ($userId && $termId) {
+        $typicalListItem = new TypicalListItem($userId);
+        return $typicalListItem->getStatus($termId);
+    }
 }
 
 
@@ -171,10 +173,12 @@ function get_typical_list_item_status($userId, $termId)
  *
  * @return array             Filled with extended taxonomy objects
  */
-function get_typical_list_item_ids($userId)
+function get_typical_list_item_ids($userId = null)
 {
-    $typicalListItem = new TypicalListItem($userId);
-    return $typicalListItem->getIds();
+    if ($userId) {
+        $typicalListItem = new TypicalListItem($userId);
+        return $typicalListItem->getIds();
+    }
 }
 
 
