@@ -49,6 +49,152 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $markup);
     }
 
+    public function testSaveGroceriesCurrentItemsOnly()
+    {
+        $userId = 1;
+        $termIds = ['20', '21', '22', '23', '24'];
+        $post = [
+            'i' => $termIds,
+            'submit' => 'Save Grocery List',
+        ];
+
+        // mock sanitizer
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->willReturn($termIds);
+
+        // mock get_term
+        $terms = [
+            [
+                'term_id'          => 20,
+                'name'             => 'onion',
+                'slug'             => 'onion',
+                'term_group'       => 0,
+                'term_taxonomy_id' => 20,
+                'taxonomy'         => 'ingredient',
+                'description'      => '',
+                'parent'           => 0,
+                'count'            => 10,
+                'filter'           => 'raw',
+            ],
+            [
+                'term_id'          => 21,
+                'name'             => 'peas',
+                'slug'             => 'peas',
+                'term_group'       => 0,
+                'term_taxonomy_id' => 21,
+                'taxonomy'         => 'ingredient',
+                'description'      => '',
+                'parent'           => 0,
+                'count'            => 1,
+                'filter'           => 'raw',
+            ],
+            [
+                'term_id'          => 22,
+                'name'             => 'rice',
+                'slug'             => 'rice',
+                'term_group'       => 0,
+                'term_taxonomy_id' => 22,
+                'taxonomy'         => 'ingredient',
+                'description'      => '',
+                'parent'           => 0,
+                'count'            => 1,
+                'filter'           => 'raw',
+            ],
+            [
+                'term_id'          => 23,
+                'name'             => 'soy sauce',
+                'slug'             => 'soy-sauce',
+                'term_group'       => 0,
+                'term_taxonomy_id' => 23,
+                'taxonomy'         => 'ingredient',
+                'description'      => '',
+                'parent'           => 0,
+                'count'            => 2,
+                'filter'           => 'raw',
+            ],
+            [
+                'term_id'          => 24,
+                'name'             => 'squash',
+                'slug'             => 'squash',
+                'term_group'       => 0,
+                'term_taxonomy_id' => 24,
+                'taxonomy'         => 'ingredient',
+                'description'      => '',
+                'parent'           => 0,
+                'count'            => 1,
+                'filter'           => 'raw',
+            ],
+        ];
+
+        foreach ($terms as $term) {
+            WP_Mock::wpFunction('get_term', [
+                'args' => [$term['term_id'], 'ingredient', OBJECT],
+                'times' => 1,
+                'return' => (object) $term,
+            ]);
+        }
+
+        // mock maybe_serialize
+        $groceries = [
+            [
+                'i' => 20,
+                'a' => 0,
+                'u' => 0,
+                't' => 'i',
+                'o' => '',
+            ],
+            [
+                'i' => 21,
+                'a' => 0,
+                'u' => 0,
+                't' => 'i',
+                'o' => '',
+            ],
+            [
+                'i' => 22,
+                'a' => 0,
+                'u' => 0,
+                't' => 'i',
+                'o' => '',
+            ],
+            [
+                'i' => 23,
+                'a' => 0,
+                'u' => 0,
+                't' => 'i',
+                'o' => '',
+            ],
+            [
+                'i' => 24,
+                'a' => 0,
+                'u' => 0,
+                't' => 'i',
+                'o' => '',
+            ],
+        ];
+
+        $serialized = 'a:5:{i:0;a:5:{s:1:"i";i:20;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:1;a:5:{s:1:"i";i:21;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:2;a:5:{s:1:"i";i:22;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:3;a:5:{s:1:"i";i:23;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:4;a:5:{s:1:"i";i:24;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}}';
+
+
+        WP_Mock::wpFunction('maybe_serialize', [
+            'args' => [$groceries],
+            'times' => 1,
+            'return' => $serialized,
+        ]);
+
+        // mock update_user_meta
+        WP_Mock::wpFunction('update_user_meta', [
+            'args' => [$userId, '_grocery_list', $serialized],
+            'times' => 1,
+            'return' => true,
+        ]);
+
+        $currentList = new CurrentList($userId);
+        $isNewIngredient = $currentList->saveGroceries($post, $sanitizerStub);
+        $this->assertFalse($isNewIngredient);
+    }
+
     public function testSaveGroceriesIngredientsOnly()
     {
         $userId = 1;
