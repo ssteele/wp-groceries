@@ -197,7 +197,7 @@ class CurrentList extends GroceryList
 
         // Merge in typical items with ingredients if toggled
         if (isset($_POST['typical_items_toggle'])) {
-            $typicalItems = get_typical_list_item_ids();
+            $typicalItems = get_typical_list_item_ids($this->userId);
             $ingredient = array_unique(array_merge($typicalItems, $ingredient));
         }
 

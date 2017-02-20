@@ -65,6 +65,7 @@ function shs_grocery_list_install()
         // Code to generate table
         $sql = "CREATE TABLE $tableName (
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id BIGINT(20) UNSIGNED NOT NULL,
         term_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
         typical_list_item TINYINT(1) NOT NULL DEFAULT 0,
         PRIMARY KEY (id),
@@ -134,15 +135,16 @@ add_shortcode('groceries', 'grocery_list_shortcode');
 /**
  * Save typical grocery list item status (wrapper)
  *
- * @param  integer  $termId       Taxonomy term ID
+ * @param  integer  $userId    WP user id
+ * @param  integer  $termId    Taxonomy term ID
  *
  * @return void
  */
-function save_typical_list_item_status($termId = null)
+function save_typical_list_item_status($userId, $termId = null)
 {
     if ($termId) {
         $isTypical = isset($_POST['is_typical']) ? $_POST['is_typical'] : 0;
-        $typicalListItem = new TypicalListItem();
+        $typicalListItem = new TypicalListItem($userId);
         $typicalListItem->save($termId, $isTypical);
     }
 }
@@ -151,25 +153,27 @@ function save_typical_list_item_status($termId = null)
 /**
  * Get typical list item status (wrapper)
  *
- * @param  string $termId    Taxonomy term ID
+ * @param  integer  $userId    WP user id
+ * @param  string   $termId    Taxonomy term ID
  *
  * @return string            1 if item is typical, 0 otherwise
  */
-function get_typical_list_item_status($termId)
+function get_typical_list_item_status($userId, $termId)
 {
-    $typicalListItem = new TypicalListItem();
-    return $typicalListItem->getStatus($termId);
+    $typicalListItem = new TypicalListItem($userId);
+    return $typicalListItem->getStatus($userId, $termId);
 }
 
 
 /**
  * Get typical list items (wrapper)
+ * @param integer $userId    WP user id
  *
- * @return array    Filled with extended taxonomy objects
+ * @return array             Filled with extended taxonomy objects
  */
-function get_typical_list_item_ids()
+function get_typical_list_item_ids($userId)
 {
-    $typicalListItem = new TypicalListItem();
+    $typicalListItem = new TypicalListItem($userId);
     return $typicalListItem->getIds();
 }
 

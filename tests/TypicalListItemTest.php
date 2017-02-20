@@ -8,7 +8,8 @@ class TypicalListItemTest extends \PHPUnit_Framework_TestCase
     public function testFetchStatus()
     {
         // setup
-        $typicalListItem = new TypicalListItem();
+        $userId = 1;
+        $typicalListItem = new TypicalListItem($userId);
 
         $item = [
             'id'                => '1',
@@ -26,7 +27,8 @@ class TypicalListItemTest extends \PHPUnit_Framework_TestCase
     public function testFetchIds()
     {
         // setup
-        $typicalListItem = new TypicalListItem();
+        $userId = 1;
+        $typicalListItem = new TypicalListItem($userId);
 
         $typicalItems = [
             (object) [

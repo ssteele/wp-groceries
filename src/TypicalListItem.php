@@ -6,6 +6,7 @@ class TypicalListItem
 {
 
     // Declare properties
+    public $userId;
     public $db;
     public $termId;
     public $isTypical = 0;
@@ -13,11 +14,34 @@ class TypicalListItem
 
     /**
      * Construct method
-     * @param object  $db    Probably $wpdb, but open to new things
+     * @param integer $userId    WP user id
+     * @param object  $db        Probably $wpdb, but open to new things
      */
-    public function __construct($db = null)
+    public function __construct($userId = null, $db = null)
     {
+        $this->setUser($userId);
         $this->setDb($db);
+    }
+
+
+    /**
+     * Set user
+     *
+     * @param integer $userId    WP user id
+     *
+     * @return void
+     */
+    protected function setUser($userId = null)
+    {
+        if (! isset($userId)) {
+            $userId = get_current_user_id();
+            if (! $userId) {
+                $userId = $this->idForGuestUse;
+                $this->isGuest = true;
+            }
+        }
+
+        $this->userId = $userId;
     }
 
 
@@ -79,10 +103,12 @@ class TypicalListItem
             $this->db->insert(
                 $this->db->prefix . 'term_taxonomy_extended',
                 [
+                    'user_id'           => $this->userId,
                     'term_id'           => $this->termId,
                     'typical_list_item' => $this->isTypical,
                 ],
                 [
+                    '%d',
                     '%d',
                     '%d',
                 ]
@@ -94,6 +120,7 @@ class TypicalListItem
                     'typical_list_item' => $this->isTypical,
                 ],
                 [
+                    'user_id' => $this->userId,
                     'term_id' => $this->termId,
                 ],
                 [
@@ -127,11 +154,13 @@ class TypicalListItem
      *
      * @param  string $termId    Taxonomy term ID
      *
-     * @return array              Filled with extended taxonomy objects
+     * @return array             Filled with extended taxonomy objects
      */
     private function get($termId)
     {
-        return $this->db->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE term_id = $termId");
+        return $this->db->get_results(
+            $this->db->prepare("SELECT * FROM wp_term_taxonomy_extended WHERE user_id = %d AND term_id = %d", $this->userId, $termId)
+        );
     }
 
 
@@ -158,7 +187,7 @@ class TypicalListItem
      *
      * @param  string $termId    Taxonomy term ID
      *
-     * @return string             1 if item is typical, 0 otherwise
+     * @return string            1 if item is typical, 0 otherwise
      */
     public function getStatus($termId)
     {
@@ -174,7 +203,9 @@ class TypicalListItem
      */
     private function all()
     {
-        return $this->db->get_results("SELECT * FROM wp_term_taxonomy_extended WHERE typical_list_item = '1'");
+        return $this->db->get_results(
+            $this->db->prepare("SELECT * FROM wp_term_taxonomy_extended WHERE user_id = %d AND typical_list_item = '1'", $this->userId)
+        );
     }
 
 
