@@ -565,8 +565,8 @@ class GroceryStore
         ];
 
         // Translate names to ingredient taxonomy IDs
-        $ingredients = new Ingredients();
-        $initialList = $ingredients->toTaxIds($readableList);
+        $ingredientTranslator = new IngredientTranslator();
+        $initialList = $ingredientTranslator->toTaxIds($readableList);
 
         $masterList = new MasterList();
         $masterList->initializeList($initialList, $storeId);

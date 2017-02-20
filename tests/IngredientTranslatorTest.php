@@ -4,7 +4,7 @@ namespace SteveSteele\Groceries;
 
 use WP_Mock;
 
-class IngredientTest extends \PHPUnit_Framework_TestCase
+class IngredientTranslatorTest extends \PHPUnit_Framework_TestCase
 {
 
     public function setUp()
@@ -45,21 +45,21 @@ class IngredientTest extends \PHPUnit_Framework_TestCase
             'return' => $ingredientUnitList,
         ]);
 
-        $ingredients = new Ingredients();
+        $ingredientTranslator = new IngredientTranslator();
 
         $unitName = 'spears';
         $expectedIndex = 13;
-        $unitIndex = $ingredients->unitNameToIndex($unitName);
+        $unitIndex = $ingredientTranslator->unitNameToIndex($unitName);
         $this->assertEquals($expectedIndex, $unitIndex);
 
         $unitName = 'cloves';
         $expectedIndex = 3;
-        $unitIndex = $ingredients->unitNameToIndex($unitName);
+        $unitIndex = $ingredientTranslator->unitNameToIndex($unitName);
         $this->assertEquals($expectedIndex, $unitIndex);
 
         $unitName = 'small';
         $expectedIndex = 12;
-        $unitIndex = $ingredients->unitNameToIndex($unitName);
+        $unitIndex = $ingredientTranslator->unitNameToIndex($unitName);
         $this->assertEquals($expectedIndex, $unitIndex);
     }
 
@@ -91,21 +91,21 @@ class IngredientTest extends \PHPUnit_Framework_TestCase
             'return' => $ingredientUnitList,
         ]);
 
-        $ingredients = new Ingredients();
+        $ingredientTranslator = new IngredientTranslator();
 
         $unitIndex = 13;
         $expectedName = 'spears';
-        $unitName = $ingredients->indexToUnitName($unitIndex);
+        $unitName = $ingredientTranslator->indexToUnitName($unitIndex);
         $this->assertEquals($expectedName, $unitName);
 
         $unitIndex = 3;
         $expectedName = 'cloves';
-        $unitName = $ingredients->indexToUnitName($unitIndex);
+        $unitName = $ingredientTranslator->indexToUnitName($unitIndex);
         $this->assertEquals($expectedName, $unitName);
 
         $unitIndex = 12;
         $expectedName = 'small';
-        $unitName = $ingredients->indexToUnitName($unitIndex);
+        $unitName = $ingredientTranslator->indexToUnitName($unitIndex);
         $this->assertEquals($expectedName, $unitName);
     }
 }

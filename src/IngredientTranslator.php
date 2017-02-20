@@ -2,10 +2,16 @@
 
 namespace SteveSteele\Groceries;
 
-class Ingredients
+class IngredientTranslator
 {
 
     // Declare properties
+    public $id = 'i';
+    public $amount = 'a';
+    public $unit = 'u';
+    public $type = 't';
+    public $optional = 'o';
+    public $pic = 'p';
 
 
     /**
