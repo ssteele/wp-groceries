@@ -337,10 +337,12 @@ function render_grocery_list_admin_form()
 
             <div class="list-box existing">
 
-                <h3>
-                    <input type="checkbox" id="typical_items_toggle" name="typical_items_toggle" value="1" />
-                    <label for="typical_items_toggle">Typical items</label>
-                </h3>
+            <?php if (current_user_can('manage_categories')) { ?>
+                    <h3>
+                        <input type="checkbox" id="typical_items_toggle" name="typical_items_toggle" value="1" />
+                        <label for="typical_items_toggle">Typical items</label>
+                    </h3>
+            <?php } ?>
 
                 <h3>
                     <input type="checkbox" id="current_items_toggle_all" />
