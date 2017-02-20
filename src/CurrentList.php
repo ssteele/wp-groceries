@@ -174,10 +174,10 @@ class CurrentList extends GroceryList
 
         // Define categories and expected input types
         $cats = [
-            'i'             => 'i',                                 // Toggled ingredients from list prior
-            'recipe'        => 'i',                                 // Recipes
-            'ingredient'    => 'i',                                 // Ingredients chosen from 'ingredient' taxonomy terms
-            'newIngredient' => 's',                                 // Unknown ingredient (string, not ID)
+            'i'              => 'i',                                // Toggled ingredients from list prior
+            'recipe'         => 'i',                                // Recipes
+            'ingredient'     => 'i',                                // Ingredients chosen from 'ingredient' taxonomy terms
+            'new_ingredient' => 's',                                // Unknown ingredient (string, not ID)
         ];
 
         // Define category-specific arrays and sanitize user input
@@ -190,11 +190,15 @@ class CurrentList extends GroceryList
                 continue;
             }
 
+            $post[$cat] = $sanitizer->sanitize($post[$cat], $type);
             foreach ($post[$cat] as $item) {
-                array_push($$cat, $sanitizer->sanitize($item, $type));
+                array_push($$cat, $item);
             }
 
         }
+
+        // Reassign to standard variable name
+        $newIngredient = $new_ingredient;
 
         // Merge new ingredients with toggled old ingredients
         $ingredient = array_merge($i, $ingredient);
