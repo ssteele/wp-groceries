@@ -17,6 +17,8 @@ class GroceryStore
      * Construct method
      * @param integer $userId    WP user id
      * @param object  $db        Probably $wpdb, but open to new things
+     *
+     * @return void
      */
     public function __construct($userId = null, $db = null)
     {
@@ -153,6 +155,17 @@ class GroceryStore
     public function getStores()
     {
         return $this->db->get_results("SELECT * FROM wp_stores WHERE user_id = $this->userId ORDER BY id ASC");
+    }
+
+
+    /**
+     * Check if user has saved store(s)
+     *
+     * @return bool    True if user has saved store(s); False otherwise
+     */
+    public function exists()
+    {
+        return ($this->getStores()) ? true : false;
     }
 
 

@@ -221,40 +221,48 @@ add_action('admin_menu', 'register_grocery_list_admin_pages');
 function the_groceries()
 {
     $groceryStore = new GroceryStore();
-    echo $groceryStore->renderStoreDropdown();
 
-    // Display current user
-    echo '<div class="login">';
-    if (! $groceryStore->isGuest) {
-        $user = get_userdata($groceryStore->userId);
-        echo $user->display_name;
-    } else {
-        echo '<a href="' . wp_login_url(get_permalink()) . '" title="Login">Login</a>';
-    }
-    echo '</div>';
+    if ($groceryStore->exists()) {
+        echo $groceryStore->renderStoreDropdown();
 
-    // Set the store id
-    echo '<div id="store_id" rel="' . $groceryStore->id . '" style="display:none;"></div>';
+        // Display current user
+        echo '<div class="login">';
+        if (! $groceryStore->isGuest) {
+            $user = get_userdata($groceryStore->userId);
+            echo $user->display_name;
+        } else {
+            echo '<a href="' . wp_login_url(get_permalink()) . '" title="Login">Login</a>';
+        }
+        echo '</div>';
 
-    ?>
+        // Set the store id
+        echo '<div id="store_id" rel="' . $groceryStore->id . '" style="display:none;"></div>';
 
-    <h2><?php $groceryStore->getStoreName($groceryStore->id, true); ?></h2>
+        ?>
 
-    <div class="ingredients groceries">
-        <ul id="slip_list">
+        <h2><?php $groceryStore->getStoreName($groceryStore->id, true); ?></h2>
 
-            <?php
+        <div class="ingredients groceries">
+            <ul id="slip_list">
 
-            // Get existing list items
-            $currentList = new CurrentList();
-            echo $currentList->renderGroceries($groceryStore->id);
+                <?php
 
-            ?>
+                // Get existing list items
+                $currentList = new CurrentList();
+                echo $currentList->renderGroceries($groceryStore->id);
 
-        </ul>
-    </div>
+                ?>
+
+            </ul>
+        </div>
 
     <?php
+    } else {
+        echo '<div>';
+        echo '    You have no saved stores.';
+        echo '    <a href="' . get_admin_url() . 'edit.php?post_type=recipe&page=grocery-stores" title="Create your stores here">Create your stores here.</a>';
+        echo '</div>';
+    }
 }
 
 
