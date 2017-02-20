@@ -20,7 +20,285 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
 
     public function testExtractSaveGroceries()
     {
-        // pass
+        $userId = 1;
+        $currentList = new CurrentList($userId);
+
+        // item from previous list
+        $currentItemInput = ['2'];
+        $post = [
+            'i' => $currentItemInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEquals($currentItems, $currentItemInput);
+        $this->assertEmpty($recipes);
+        $this->assertEmpty($ingredients);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // items from previous list
+        $currentItemInput = ['2', '3', '4'];
+        $post = [
+            'i' => $currentItemInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEquals($currentItems, $currentItemInput);
+        $this->assertEmpty($recipes);
+        $this->assertEmpty($ingredients);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // ingredient
+        $ingredientInput = ['2'];
+        $post = [
+            'ingredient' => $ingredientInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEmpty($recipes);
+        $this->assertEquals($ingredients, $ingredientInput);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // ingredients
+        $ingredientInput = ['2', '3', '4'];
+        $post = [
+            'ingredient' => $ingredientInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEmpty($recipes);
+        $this->assertEquals($ingredients, $ingredientInput);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // recipe
+        $recipeInput = ['2'];
+        $post = [
+            'recipe' => $recipeInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEquals($recipes, $recipeInput);
+        $this->assertEmpty($ingredients);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // recipes
+        $recipeInput = ['2', '3', '4'];
+        $post = [
+            'recipe' => $recipeInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEquals($recipes, $recipeInput);
+        $this->assertEmpty($ingredients);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // new ingredient
+        $newIngredientInput = ['new ingredient'];
+        $post = [
+            'new_ingredient' => $newIngredientInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEmpty($recipes);
+        $this->assertEmpty($ingredients);
+        $this->assertEquals($newIngredients, $newIngredientInput);
+        $this->assertEmpty($typicalItems);
+
+        // new ingredients
+        $newIngredientInput = ['new ingredient', 'other new ingredient', 'other other new ingredient'];
+        $post = [
+            'new_ingredient' => $newIngredientInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEmpty($recipes);
+        $this->assertEmpty($ingredients);
+        $this->assertEquals($newIngredients, $newIngredientInput);
+        $this->assertEmpty($typicalItems);
+
+        // typical ingredient
+        $typicalItemSaved = ['2'];
+        $post = [
+            'typical_items_toggle' => '1',
+            'submit' => 'Save Grocery List',
+        ];
+        WP_Mock::wpFunction('get_typical_list_item_ids', [
+            'args' => [$userId],
+            'times' => 1,
+            'return' => $typicalItemSaved,
+        ]);
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEmpty($recipes);
+        $this->assertEmpty($ingredients);
+        $this->assertEmpty($newIngredients);
+        $this->assertEquals($typicalItems, $typicalItemSaved);
+
+        // typical ingredients
+        $typicalItemSaved = ['2, 3, 4'];
+        $post = [
+            'typical_items_toggle' => '1',
+            'submit' => 'Save Grocery List',
+        ];
+        WP_Mock::wpFunction('get_typical_list_item_ids', [
+            'args' => [$userId],
+            'times' => 1,
+            'return' => $typicalItemSaved,
+        ]);
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEmpty($currentItems);
+        $this->assertEmpty($recipes);
+        $this->assertEmpty($ingredients);
+        $this->assertEmpty($newIngredients);
+        $this->assertEquals($typicalItems, $typicalItemSaved);
+
+        // items from previous list
+        //  & ingredients
+        $currentItemInput = ['2', '3', '4'];
+        $ingredientInput = ['5', '6', '7'];
+        $post = [
+            'i' => $currentItemInput,
+            'ingredient' => $ingredientInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEquals($currentItems, $currentItemInput);
+        $this->assertEmpty($recipes);
+        $this->assertEquals($ingredients, $ingredientInput);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // items from previous list
+        //  & ingredients
+        //  & recipes
+        $currentItemInput = ['2', '3', '4'];
+        $ingredientInput = ['5', '6', '7'];
+        $recipesInput = ['8', '9', '10'];
+        $post = [
+            'i' => $currentItemInput,
+            'ingredient' => $ingredientInput,
+            'recipe' => $recipeInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEquals($currentItems, $currentItemInput);
+        $this->assertEquals($recipes, $recipeInput);
+        $this->assertEquals($ingredients, $ingredientInput);
+        $this->assertEmpty($newIngredients);
+        $this->assertEmpty($typicalItems);
+
+        // items from previous list
+        //  & ingredients
+        //  & recipes
+        //  & new ingredients
+        $currentItemInput = ['2', '3', '4'];
+        $ingredientInput = ['5', '6', '7'];
+        $recipesInput = ['8', '9', '10'];
+        $newIngredientInput = ['new ingredient', 'other new ingredient', 'other other new ingredient'];
+        $post = [
+            'i' => $currentItemInput,
+            'ingredient' => $ingredientInput,
+            'recipe' => $recipeInput,
+            'new_ingredient' => $newIngredientInput,
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEquals($currentItems, $currentItemInput);
+        $this->assertEquals($recipes, $recipeInput);
+        $this->assertEquals($ingredients, $ingredientInput);
+        $this->assertEquals($newIngredients, $newIngredientInput);
+        $this->assertEmpty($typicalItems);
+
+        // items from previous list
+        //  & ingredients
+        //  & recipes
+        //  & new ingredients
+        //  & typical ingredients
+        $currentItemInput = ['2', '3', '4'];
+        $ingredientInput = ['5', '6', '7'];
+        $recipesInput = ['8', '9', '10'];
+        $newIngredientInput = ['new ingredient', 'other new ingredient', 'other other new ingredient'];
+        $typicalItemSaved = ['11, 12, 13'];
+        $post = [
+            'i' => $currentItemInput,
+            'ingredient' => $ingredientInput,
+            'recipe' => $recipeInput,
+            'new_ingredient' => $newIngredientInput,
+            'typical_items_toggle' => '1',
+            'submit' => 'Save Grocery List',
+        ];
+        $sanitizerStub = $this->createMock(Sanitizer::class);
+        $sanitizerStub->method('sanitize')
+            ->will($this->returnArgument(0));
+        WP_Mock::wpFunction('get_typical_list_item_ids', [
+            'args' => [$userId],
+            'times' => 1,
+            'return' => $typicalItemSaved,
+        ]);
+
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        $this->assertEquals($currentItems, $currentItemInput);
+        $this->assertEquals($recipes, $recipeInput);
+        $this->assertEquals($ingredients, $ingredientInput);
+        $this->assertEquals($newIngredients, $newIngredientInput);
+        $this->assertEquals($typicalItems, $typicalItemSaved);
     }
 
     public function testSaveGroceriesCurrentItemsOnly()

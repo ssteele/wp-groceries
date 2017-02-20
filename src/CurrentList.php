@@ -168,7 +168,7 @@ class CurrentList extends GroceryList
      * @return array                                Filled with sanitized input category arrays
      *                                              ...current items, recipes, ingredients, new ingredients, typical items
      */
-    private function extractSaveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
+    public function extractSaveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
     {
         // Define categories and expected input types
         $cats = [
