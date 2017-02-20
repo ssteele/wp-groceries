@@ -125,7 +125,10 @@ function grocery_list_shortcode($atts)
         if (is_user_logged_in() || $primaryUserIsPublic) {
             the_groceries();
         } else {
-            // redirect to welcome page that expounds on all the good things here and invites the user to create an account
+            $welcome = get_page_by_path('welcome', OBJECT, 'page');
+            if ($welcome) {
+                echo $welcome->post_content;
+            }
         }
     }
 }
