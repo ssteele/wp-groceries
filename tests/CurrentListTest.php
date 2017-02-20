@@ -52,18 +52,18 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
     public function testSaveGroceriesIngredientsOnly()
     {
         $userId = 1;
-        $currentList = new CurrentList($userId);
-
         $termIds = ['2', '3', '4', '5', '6'];
         $post = [
             'ingredient' => $termIds,
             'submit' => 'Save Grocery List',
         ];
 
+        // mock sanitizer
         $sanitizerStub = $this->createMock(Sanitizer::class);
         $sanitizerStub->method('sanitize')
             ->willReturn($termIds);
 
+        // mock get_term
         $terms = [
             [
                 'term_id'          => 2,
@@ -135,6 +135,7 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             ]);
         }
 
+        // mock maybe_serialize
         $groceries = [
             [
                 'i' => 2,
@@ -172,6 +173,7 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
                 'o' => '',
             ],
         ];
+
         $serialized = 'a:5:{i:0;a:5:{s:1:"i";i:2;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:1;a:5:{s:1:"i";i:3;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:2;a:5:{s:1:"i";i:4;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:3;a:5:{s:1:"i";i:5;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}i:4;a:5:{s:1:"i";i:6;s:1:"a";i:0;s:1:"u";i:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";}}';
 
         WP_Mock::wpFunction('maybe_serialize', [
@@ -180,12 +182,15 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'return' => $serialized,
         ]);
 
+        // mock update_user_meta
         WP_Mock::wpFunction('update_user_meta', [
             'args' => [$userId, '_grocery_list', $serialized],
             'times' => 1,
             'return' => true,
         ]);
 
+        $currentList = new CurrentList($userId);
         $isNewIngredient = $currentList->saveGroceries($post, $sanitizerStub);
+        $this->assertFalse($isNewIngredient);
     }
 }
