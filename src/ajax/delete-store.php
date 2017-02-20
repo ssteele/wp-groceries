@@ -39,8 +39,8 @@ foreach ($postVars as $p) {
 $storeId = preg_replace('/delete_/', '', $store_id);
 
 // delete store
-$groceryStores = new GroceryStores($userId);
-$groceryStores->deleteStore($storeId);
+$groceryStore = new GroceryStore($userId);
+$groceryStore->deleteStore($storeId);
 
 echo json_encode($response);
 die;

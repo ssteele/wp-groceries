@@ -17,7 +17,7 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         WP_Mock::tearDown();
     }
 
-    public function testExistingAdminList()
+    public function testRenderExistingAdminList()
     {
         $userId = 1;
         $termId = 107;

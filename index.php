@@ -12,7 +12,7 @@ To turn this into an actual WP plugin, all of the javascript that pertains to th
 */
 
 use SteveSteele\Groceries\TypicalListItems;
-use SteveSteele\Groceries\GroceryStores;
+use SteveSteele\Groceries\GroceryStore;
 use SteveSteele\Groceries\CurrentList;
 
 require_once 'vendor/autoload.php';
@@ -209,7 +209,7 @@ add_action('admin_menu', 'register_grocery_list_admin_pages');
  */
 function the_groceries()
 {
-    $groceryStore = new GroceryStores();
+    $groceryStore = new GroceryStore();
     echo $groceryStore->renderStoreDropdown();
 
     // Display current user
@@ -377,10 +377,10 @@ function render_grocery_stores_admin_form()
     }
 
     // Instantiate grocery stores object
-    $groceryStores = new GroceryStores();
+    $groceryStore = new GroceryStore();
 
     if (isset($_POST['submit'])) {
-        $groceryStores->saveStores();
+        $groceryStore->saveStores();
         echo '<div class="updated"><p><strong>Grocery Stores Saved</strong></p></div>';
     }
 
@@ -407,7 +407,7 @@ function render_grocery_stores_admin_form()
                 </div>
             </div>
 
-            <?php echo $groceryStores->showStores(); ?>
+            <?php echo $groceryStore->showStores(); ?>
 
             <div class="clearfix"></div>
 

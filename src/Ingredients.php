@@ -68,7 +68,7 @@ class Ingredients
      * @param  string $index    Ingredient unit index
      * @return string           Ingredient unit name
      */
-    public function unitIndexToName($index)
+    public function indexToUnitName($index)
     {
         $unitList = get_option('_ingredient_unit_list');
         return $unitList[$index];

@@ -39,8 +39,8 @@ foreach ($postVars as $p) {
 $storeId = preg_replace('/favorite_/', '', $store_id);
 
 // save user favorite
-$groceryStores = new GroceryStores($userId);
-$groceryStores->saveFavoriteStore($storeId);
+$groceryStore = new GroceryStore($userId);
+$groceryStore->saveFavoriteStore($storeId);
 
 echo json_encode($response);
 die;

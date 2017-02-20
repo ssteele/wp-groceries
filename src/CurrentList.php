@@ -99,7 +99,7 @@ class CurrentList extends GroceryList
                 // Prepend any item description (usually 'organic')
                 $desc = term_description($item[$id], 'ingredient');
                 $name = $ingredients->fromTaxIds([$item[$id]]);
-                $unitName = $ingredients->unitIndexToName($item[$unit]);
+                $unitName = $ingredients->indexToUnitName($item[$unit]);
 
                 // Get single units where necessary
                 if (! stristr($item[$amount], 'to') && ($item[$amount] != 0 && $item[$amount] <= 1)) {

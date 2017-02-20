@@ -2,7 +2,7 @@
 
 namespace SteveSteele\Groceries;
 
-class GroceryStores
+class GroceryStore
 {
 
     // Declare properties
