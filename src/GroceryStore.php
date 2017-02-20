@@ -227,13 +227,13 @@ class GroceryStore
 
     /**
      * Verify that a store exists
+     * @param  arr   $stores     Existing user stores
      * @param  int   $storeId    Store identifier
      *
      * @return bool    True if exists; False otherwise
      */
-    private function isExistingStore($storeId = null)
+    public function isExistingStore($stores = [], $storeId = null)
     {
-        $stores = $this->getStores();
         $storeIds = [];
         foreach ($stores as $store) {
             $storeIds[] = $store->id;
@@ -275,13 +275,14 @@ class GroceryStore
 
     /**
      * Return user favorite store
+     * @param  arr   $stores     Existing user stores
      *
-     * @return int    Favorite store identifier or false if not selected
+     * @return int               Favorite store identifier or false if not selected
      */
-    private function getFavoriteStore()
+    private function getFavoriteStore($stores = [])
     {
         $userFavoriteStoreId = get_user_meta($this->userId, '_favorite_store', true);
-        if ($userFavoriteStoreId && $this->isExistingStore($userFavoriteStoreId)) {
+        if ($userFavoriteStoreId && $this->isExistingStore($stores, $userFavoriteStoreId)) {
             $this->id = $userFavoriteStoreId;
             return $userFavoriteStoreId;
         } else {
@@ -294,11 +295,12 @@ class GroceryStore
 
     /**
      * Return favorite user store
-     * @return int    Favorite store identifier or false if not selected
+     * @param  arr   $stores     Existing user stores
+     *
+     * @return int               Favorite store identifier or false if not selected
      */
-    private function getFirstStore()
+    public function getFirstStore($stores = [])
     {
-        $stores = $this->getStores();
         if (! empty($stores) && isset($stores[0]->id)) {
             return $stores[0]->id;
         }
@@ -309,12 +311,14 @@ class GroceryStore
 
     /**
      * Return default user store
-     * @return int    Default store identifier
+     * @param  arr   $stores     Existing user stores
+     *
+     * @return int               Default store identifier
      */
-    private function getDefaultStore()
+    private function getDefaultStore($stores = [])
     {
-        if (! $defaultStoreId = $this->getFavoriteStore()) {
-            $defaultStoreId = $this->getFirstStore();
+        if (! $defaultStoreId = $this->getFavoriteStore($stores)) {
+            $defaultStoreId = $this->getFirstStore($stores);
         }
 
         $this->id = $defaultStoreId;
@@ -332,9 +336,9 @@ class GroceryStore
         $output = '';
         $stores = $this->getStores();
 
-        if (isset($stores) && ! empty($stores)) {
+        if (! empty($stores)) {
             // Get user favorite store
-            $this->getDefaultStore();
+            $this->getDefaultStore($stores);
 
             // Collect store IDs and save to hidden field to aid form handling
             $arrStoreIds = [];
@@ -389,7 +393,8 @@ class GroceryStore
             $this->id = sanitize_input($_GET['sid'], 'i');
         } else {
             // Get user default (favorite if selected)
-            $this->getDefaultStore();
+            $stores = $this->getStores();
+            $this->getDefaultStore($stores);
         }
     }
 
