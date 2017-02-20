@@ -2,7 +2,7 @@
 
 namespace SteveSteele\Groceries;
 
-class GroceryStores
+class GroceryStore
 {
 
     // Declare properties
@@ -17,6 +17,8 @@ class GroceryStores
      * Construct method
      * @param integer $userId    WP user id
      * @param object  $db        Probably $wpdb, but open to new things
+     *
+     * @return void
      */
     public function __construct($userId = null, $db = null)
     {
@@ -75,13 +77,13 @@ class GroceryStores
         $isNew = is_null($storeId) ? true : false;
 
         // Handle user input
-        $postVars = ['name', 'number', 'street', 'city', 'state', 'zip'];
+        $postVars = ['name', 'number', 'street', 'city', 'zip'];
 
         foreach ($postVars as $p) {
             $var = ($isNew) ? $p : $p . '_' . $storeId;
 
             if (isset($_POST[$var]) && ! empty($_POST[$var])) {
-                $$p = sanitize_input($_POST[$var], 's');
+                $$p = shsSanitize($_POST[$var], 's');
             } else {
                 $$p = '';
             }
@@ -98,12 +100,10 @@ class GroceryStores
                         'number'  => $number,
                         'street'  => $street,
                         'city'    => $city,
-                        'state'   => $state,
                         'zip'     => $zip,
                     ],
                     [
                         '%d',
-                        '%s',
                         '%s',
                         '%s',
                         '%s',
@@ -123,14 +123,12 @@ class GroceryStores
                         'number' => $number,
                         'street' => $street,
                         'city'   => $city,
-                        'state'  => $state,
                         'zip'    => $zip,
                     ],
                     [
                         'id' => $storeId,
                     ],
                     [
-                        '%s',
                         '%s',
                         '%s',
                         '%s',
@@ -153,6 +151,17 @@ class GroceryStores
     public function getStores()
     {
         return $this->db->get_results("SELECT * FROM wp_stores WHERE user_id = $this->userId ORDER BY id ASC");
+    }
+
+
+    /**
+     * Check if user has saved store(s)
+     *
+     * @return bool    True if user has saved store(s); False otherwise
+     */
+    public function exists()
+    {
+        return ($this->getStores()) ? true : false;
     }
 
 
@@ -192,7 +201,7 @@ class GroceryStores
         // Save existing store modifications
         if (! empty($arrStoreIds)) {
             foreach ($arrStoreIds as $id) {
-                $storeId = sanitize_input($id, 'i');
+                $storeId = shsSanitize($id, 'i');
                 $this->setStore($storeId);
             }
         }
@@ -227,13 +236,13 @@ class GroceryStores
 
     /**
      * Verify that a store exists
+     * @param  arr   $stores     Existing user stores
      * @param  int   $storeId    Store identifier
      *
      * @return bool    True if exists; False otherwise
      */
-    private function isExistingStore($storeId = null)
+    public function isExistingStore($stores = [], $storeId = null)
     {
-        $stores = $this->getStores();
         $storeIds = [];
         foreach ($stores as $store) {
             $storeIds[] = $store->id;
@@ -275,13 +284,14 @@ class GroceryStores
 
     /**
      * Return user favorite store
+     * @param  arr   $stores     Existing user stores
      *
-     * @return int    Favorite store identifier or false if not selected
+     * @return int               Favorite store identifier or false if not selected
      */
-    private function getFavoriteStore()
+    private function getFavoriteStore($stores = [])
     {
         $userFavoriteStoreId = get_user_meta($this->userId, '_favorite_store', true);
-        if ($userFavoriteStoreId && $this->isExistingStore($userFavoriteStoreId)) {
+        if ($userFavoriteStoreId && $this->isExistingStore($stores, $userFavoriteStoreId)) {
             $this->id = $userFavoriteStoreId;
             return $userFavoriteStoreId;
         } else {
@@ -294,11 +304,12 @@ class GroceryStores
 
     /**
      * Return favorite user store
-     * @return int    Favorite store identifier or false if not selected
+     * @param  arr   $stores     Existing user stores
+     *
+     * @return int               Favorite store identifier or false if not selected
      */
-    private function getFirstStore()
+    public function getFirstStore($stores = [])
     {
-        $stores = $this->getStores();
         if (! empty($stores) && isset($stores[0]->id)) {
             return $stores[0]->id;
         }
@@ -309,12 +320,14 @@ class GroceryStores
 
     /**
      * Return default user store
-     * @return int    Default store identifier
+     * @param  arr   $stores     Existing user stores
+     *
+     * @return int               Default store identifier
      */
-    private function getDefaultStore()
+    private function getDefaultStore($stores = [])
     {
-        if (! $defaultStoreId = $this->getFavoriteStore()) {
-            $defaultStoreId = $this->getFirstStore();
+        if (! $defaultStoreId = $this->getFavoriteStore($stores)) {
+            $defaultStoreId = $this->getFirstStore($stores);
         }
 
         $this->id = $defaultStoreId;
@@ -332,9 +345,9 @@ class GroceryStores
         $output = '';
         $stores = $this->getStores();
 
-        if (isset($stores) && ! empty($stores)) {
+        if (! empty($stores)) {
             // Get user favorite store
-            $this->getDefaultStore();
+            $this->getDefaultStore($stores);
 
             // Collect store IDs and save to hidden field to aid form handling
             $arrStoreIds = [];
@@ -355,18 +368,12 @@ class GroceryStores
 
                 $output .= '   </div>';
                 $output .= '   <div class="store-input">';
-
-                $output .= '       <select class="state-dropdown" name="state_' . $s->id . '" size="1">';
-                $output .= '           <option value=""></option>';
-                $output .= '           <option value="TX" selected="selected">TX</option>';
-                $output .= '       </select>';
                 $output .= '       <div class="clearfix"></div>';
                 $output .= '       <input type="text" name="name_' . $s->id . '" id="name_' . $s->id . '" class="half" placeholder="Store Name*" value="' . $s->name . '" />';
                 $output .= '       <input type="text" name="number_' . $s->id . '" id="number_' . $s->id . '" class="half" placeholder="Store Number" value="' . $s->number . '" />';
                 $output .= '       <input type="text" name="street_' . $s->id . '" id="street_' . $s->id . '" class="full" placeholder="Street" value="' . $s->street . '" />';
                 $output .= '       <input type="text" name="city_' . $s->id . '" id="city_' . $s->id . '" class="half" placeholder="City" value="' . $s->city . '" />';
                 $output .= '       <input type="text" name="zip_' . $s->id . '" id="zip_' . $s->id . '" class="half" placeholder="Zip" value="' . $s->zip . '" />';
-
                 $output .= '   </div>';
                 $output .= '</div>';
             }
@@ -386,10 +393,11 @@ class GroceryStores
     {
         if (isset($_GET['sid']) && ! empty($_GET['sid'])) {
             // Select from store dropdown
-            $this->id = sanitize_input($_GET['sid'], 'i');
+            $this->id = shsSanitize($_GET['sid'], 'i');
         } else {
             // Get user default (favorite if selected)
-            $this->getDefaultStore();
+            $stores = $this->getStores();
+            $this->getDefaultStore($stores);
         }
     }
 
@@ -428,14 +436,12 @@ class GroceryStores
 
     /**
      * Retrieve/Render a store name
-     * @param  int  $storeId    Store identifier
+     * @param  obj  $store      Store
      * @param  bool $echo       If true, echo name
      * @return str              Store name or false if store does not exist
      */
-    public function getStoreName($storeId, $echo = false)
+    public function fetchStoreName($store, $echo = false)
     {
-        $store = $this->getStore($storeId);
-
         if (! $store) {
             return false;
         }
@@ -447,6 +453,19 @@ class GroceryStores
         }
 
         return $name;
+    }
+
+
+    /**
+     * Retrieve/Render a store name (wrapper)
+     * @param  int  $storeId    Store identifier
+     * @param  bool $echo       If true, echo name
+     * @return str              Store name or false if store does not exist
+     */
+    public function getStoreName($storeId, $echo = false)
+    {
+        $store = $this->getStore($storeId);
+        return $this->fetchStoreName($store, $echo);
     }
 
 
@@ -536,7 +555,8 @@ class GroceryStores
         ];
 
         // Translate names to ingredient taxonomy IDs
-        $initialList = ingredients_to_tax_ids($readableList);
+        $ingredientTranslator = new IngredientTranslator();
+        $initialList = $ingredientTranslator->toTaxIds($readableList);
 
         $masterList = new MasterList();
         $masterList->initializeList($initialList, $storeId);

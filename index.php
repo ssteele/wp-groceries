@@ -11,11 +11,18 @@ To turn this into an actual WP plugin, all of the javascript that pertains to th
 
 */
 
-use SteveSteele\Groceries\TypicalListItems;
-use SteveSteele\Groceries\GroceryStores;
+use SteveSteele\Groceries\TypicalListItem;
+use SteveSteele\Groceries\GroceryStore;
 use SteveSteele\Groceries\CurrentList;
+use SteveSteele\Sanitizer;
 
 require_once 'vendor/autoload.php';
+
+const SHS_GROCERY_LIST_PLUGIN_NAME = 'SHS Grocery List';
+
+// https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
+const GROCERY_LIST_CAPABILITY = 'read';                             // everyone can, no one cannot (previously 'manage_options')
+const INGREDIENT_TAG_CREATE_CAPABILITY = 'manage_categories';       // editor's can, authors cannot
 
 
 /**
@@ -23,10 +30,7 @@ require_once 'vendor/autoload.php';
  */
 function shs_grocery_list_install()
 {
-    // Check to make sure 'Recipes' is activated
-    if (! function_exists('shs_save_recipe')) {
-        wp_die('This plugin depends on functionality from the \'Recipes\' plugin');
-    }
+    areGroceryListDependenciesEnabled(false);
 
     add_option('shs_grocery_list_version', '1.0');
     add_option('shs_grocery_list_id', 'SHS-GroceryList-' . time());
@@ -62,6 +66,7 @@ function shs_grocery_list_install()
         // Code to generate table
         $sql = "CREATE TABLE $tableName (
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id BIGINT(20) UNSIGNED NOT NULL,
         term_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
         typical_list_item TINYINT(1) NOT NULL DEFAULT 0,
         PRIMARY KEY (id),
@@ -111,69 +116,36 @@ register_activation_hook(__FILE__, 'shs_grocery_list_install');
 
 
 /**
- * Convert a list of readable ingredients to WP taxonomy indices
- * @param  array $ingredients    Readable ingredients list
- * @return array                 Ingredient indices
+ * Determine if plugin dependencies are enabled
+ * @param  bool $allowPluginManagement    If true, allows requests to plugin management admin page
+ * @return bool                           True if all dependencies are enabled; False otherwise
  */
-function ingredients_to_tax_ids($ingredients)
+function areGroceryListDependenciesEnabled($allowPluginManagement = true)
 {
-    // Translate names to ingredient taxonomy IDs
-    $output = [];
-    foreach ($ingredients as $name) {
-        $object = get_term_by('name', $name, 'ingredient');
-        $output[] = $object->term_id;
-    }
+    // Specify plugin dependencies and function to check if existing
+    $dependencies = [
+        'SHS Recipes'  => 'shs_save_recipe',
+        'SHS Sanitize' => 'shsSanitize',
+    ];
 
-    return $output;
-}
+    // Get current URL
+    $currentUrl = site_url() . $_SERVER['REQUEST_URI'];
 
+    // Get plugin admin page URL
+    $pluginsPageUrl = admin_url('plugins.php');
 
-/**
- * Convert a list of WP taxonomy indices to readable ingredients
- * @param  array $indices    Ingredient indices
- * @return array             Readable ingredients list
- */
-function tax_ids_to_ingredients($indices)
-{
-    // Translate ingredient taxonomy IDs to names
-    $output = [];
-    foreach ($indices as $i) {
-        $object = get_term_by('id', $i, 'ingredient');
+    // Determine if user is requesting plugin admin page URL
+    $isRequestingPluginsPage = preg_match("|$pluginsPageUrl|", $currentUrl);
 
-        if ($object) {
-            $output[] = $object->name;
+    foreach ($dependencies as $plugin => $function) {
+        if (! function_exists($function) && ! ($allowPluginManagement && $isRequestingPluginsPage)) {
+            $message = '`' . SHS_GROCERY_LIST_PLUGIN_NAME . '` depends on functionality from the `' . $plugin . '` plugin.<br /><br />';
+            if ($allowPluginManagement) {
+                $message .= '<a href="' . $pluginsPageUrl . '">Click here</a> to enable `' . $plugin . '`.';
+            }
+            wp_die($message);
         }
     }
-
-    return $output;
-}
-
-
-/**
- * Convert ingredient unit name to proper index before saving to DB
- * @param  string $name    Ingredient unit name
- * @return string          Ingredient unit index
- */
-function unit_name_to_index($name)
-{
-    if (empty($name)) {
-        return false;
-    }
-
-    $unitList = array_flip(get_option('_ingredient_unit_list'));
-    return $unitList[$name];
-}
-
-
-/**
- * Convert ingredient unit index to name before rendering data from DB
- * @param  string $index    Ingredient unit index
- * @return string           Ingredient unit name
- */
-function unit_index_to_name($index)
-{
-    $unitList = get_option('_ingredient_unit_list');
-    return $unitList[$index];
 }
 
 
@@ -188,7 +160,10 @@ function grocery_list_shortcode($atts)
         if (is_user_logged_in() || $primaryUserIsPublic) {
             the_groceries();
         } else {
-            // redirect to welcome page that expounds on all the good things here and invites the user to create an account
+            $welcome = get_page_by_path('welcome', OBJECT, 'page');
+            if ($welcome) {
+                echo $welcome->post_content;
+            }
         }
     }
 }
@@ -198,16 +173,17 @@ add_shortcode('groceries', 'grocery_list_shortcode');
 /**
  * Save typical grocery list item status (wrapper)
  *
- * @param  integer  $termId       Taxonomy term ID
+ * @param  integer  $userId    WP user id
+ * @param  integer  $termId    Taxonomy term ID
  *
  * @return void
  */
-function save_typical_list_item_status($termId = null)
+function save_typical_list_item_status($userId = null, $termId = null)
 {
-    if ($termId) {
+    if ($userId && $termId) {
         $isTypical = isset($_POST['is_typical']) ? $_POST['is_typical'] : 0;
-        $typicalListItems = new TypicalListItems();
-        $typicalListItems->saveTypicalListItem($termId, $isTypical);
+        $typicalListItem = new TypicalListItem($userId);
+        $typicalListItem->save($termId, $isTypical);
     }
 }
 
@@ -215,26 +191,32 @@ function save_typical_list_item_status($termId = null)
 /**
  * Get typical list item status (wrapper)
  *
- * @param  string $termId    Taxonomy term ID
+ * @param  integer  $userId    WP user id
+ * @param  string   $termId    Taxonomy term ID
  *
  * @return string            1 if item is typical, 0 otherwise
  */
-function get_typical_list_item_status($termId)
+function get_typical_list_item_status($userId = null, $termId = null)
 {
-    $typicalListItems = new TypicalListItems();
-    return $typicalListItems->getTypicalListItemStatus($termId);
+    if ($userId && $termId) {
+        $typicalListItem = new TypicalListItem($userId);
+        return $typicalListItem->getStatus($termId);
+    }
 }
 
 
 /**
  * Get typical list items (wrapper)
+ * @param integer $userId    WP user id
  *
- * @return array    Filled with extended taxonomy objects
+ * @return array             Filled with extended taxonomy objects
  */
-function get_typical_list_item_ids()
+function get_typical_list_item_ids($userId = null)
 {
-    $typicalListItems = new TypicalListItems();
-    return $typicalListItems->getTypicalListItemIds();
+    if ($userId) {
+        $typicalListItem = new TypicalListItem($userId);
+        return $typicalListItem->getIds();
+    }
 }
 
 
@@ -243,11 +225,13 @@ function get_typical_list_item_ids()
  */
 function register_grocery_list_admin_pages()
 {
+    areGroceryListDependenciesEnabled();
+
     add_submenu_page(
         'edit.php?post_type=recipe',
         'Manage Grocery Stores',
         'Grocery Stores',
-        'manage_options',
+        GROCERY_LIST_CAPABILITY,
         'grocery-stores',
         'render_grocery_stores_admin_form'
     );
@@ -256,7 +240,7 @@ function register_grocery_list_admin_pages()
         'edit.php?post_type=recipe',
         'Create a Grocery List',
         'Grocery List',
-        'manage_options',
+        GROCERY_LIST_CAPABILITY,
         'grocery-list',
         'render_grocery_list_admin_form'
     );
@@ -276,41 +260,50 @@ add_action('admin_menu', 'register_grocery_list_admin_pages');
  */
 function the_groceries()
 {
-    $groceryStore = new GroceryStores();
-    echo $groceryStore->renderStoreDropdown();
+    $groceryStore = new GroceryStore();
 
-    // Display current user
-    echo '<div class="login">';
-    if (! $groceryStore->isGuest) {
-        $user = get_userdata($groceryStore->userId);
-        echo $user->display_name;
-    } else {
-        echo '<a href="' . wp_login_url(get_permalink()) . '" title="Login">Login</a>';
-    }
-    echo '</div>';
+    if ($groceryStore->exists()) {
+        echo $groceryStore->renderStoreDropdown();
 
-    // Set the store id
-    echo '<div id="store_id" rel="' . $groceryStore->id . '" style="display:none;"></div>';
+        // Display current user
+        echo '<div class="login">';
+        if (! $groceryStore->isGuest) {
+            $user = get_userdata($groceryStore->userId);
+            echo $user->display_name;
+        } else {
+            echo '<a href="' . wp_login_url(get_permalink()) . '" title="Login">Login</a>';
+        }
+        echo '</div>';
 
-    ?>
+        // Set the store id
+        echo '<div id="store_id" rel="' . $groceryStore->id . '" style="display:none;"></div>';
 
-    <h2><?php $groceryStore->getStoreName($groceryStore->id, true); ?></h2>
+        ?>
 
-    <div class="ingredients groceries">
-        <ul id="slip_list">
+        <h2><?php $groceryStore->getStoreName($groceryStore->id, true); ?></h2>
 
-            <?php
+        <div class="ingredients groceries">
+            <ul id="slip_list">
 
-            // Get existing list items
-            $currentList = new CurrentList();
-            echo $currentList->renderGroceries($groceryStore->id);
+                <?php
 
-            ?>
+                // Get existing list items
+                $currentList = new CurrentList();
+                $sanitizer = new Sanitizer();
+                echo $currentList->renderGroceries($groceryStore->id, $sanitizer);
 
-        </ul>
-    </div>
+                ?>
+
+            </ul>
+        </div>
 
     <?php
+    } else {
+        echo '<div>';
+        echo '    You have no saved stores.';
+        echo '    <a href="' . get_admin_url() . 'edit.php?post_type=recipe&page=grocery-stores" title="Create your stores here">Create your stores here.</a>';
+        echo '</div>';
+    }
 }
 
 
@@ -319,7 +312,7 @@ function the_groceries()
  */
 function render_grocery_list_admin_form()
 {
-    if (! current_user_can('manage_options')) {
+    if (! current_user_can(GROCERY_LIST_CAPABILITY)) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
 
@@ -327,7 +320,8 @@ function render_grocery_list_admin_form()
     $currentList = new CurrentList();
 
     if (isset($_POST['submit'])) {
-        $isNewIngredient = $currentList->saveGroceries();
+        $sanitizer = new Sanitizer();
+        $isNewIngredient = $currentList->saveGroceries($_POST, $sanitizer);
 
         ?>
 
@@ -393,10 +387,12 @@ function render_grocery_list_admin_form()
 
             <div class="list-box existing">
 
-                <h3>
-                    <input type="checkbox" id="typical_items_toggle" name="typical_items_toggle" value="1" />
-                    <label for="typical_items_toggle">Typical items</label>
-                </h3>
+            <?php if (current_user_can(INGREDIENT_TAG_CREATE_CAPABILITY)) { ?>
+                    <h3>
+                        <input type="checkbox" id="typical_items_toggle" name="typical_items_toggle" value="1" />
+                        <label for="typical_items_toggle">Typical items</label>
+                    </h3>
+            <?php } ?>
 
                 <h3>
                     <input type="checkbox" id="current_items_toggle_all" />
@@ -416,14 +412,11 @@ function render_grocery_list_admin_form()
 
             <div class="clearfix"></div>
 
-            <div class="hr"></div>
-
             <div id="grocery-list-footer">
-                <p class="current-list">The current list can be found <a href="<?php echo site_url(); ?>/grocery-list/">here</a></p>
-
                 <p class="submit">
                     <input type="submit" name="submit" class="button-primary" value="Save Grocery List" />
                 </p>
+                <p class="current-list">The current list can be found <a href="<?php echo site_url(); ?>/grocery-list/">here</a></p>
             </div>
 
         </form>
@@ -439,15 +432,15 @@ function render_grocery_list_admin_form()
  */
 function render_grocery_stores_admin_form()
 {
-    if (! current_user_can('manage_options')) {
+    if (! current_user_can(GROCERY_LIST_CAPABILITY)) {
         wp_die(__('You do not have sufficient permissions to access this page.'));
     }
 
     // Instantiate grocery stores object
-    $groceryStores = new GroceryStores();
+    $groceryStore = new GroceryStore();
 
     if (isset($_POST['submit'])) {
-        $groceryStores->saveStores();
+        $groceryStore->saveStores();
         echo '<div class="updated"><p><strong>Grocery Stores Saved</strong></p></div>';
     }
 
@@ -461,11 +454,6 @@ function render_grocery_stores_admin_form()
 
             <div class="list-box new">
                 <div class="store-input">
-                    <select class="state-dropdown" name="state" size="1">
-                        <option value=""></option>
-                        <option value="TX" selected="selected">TX</option>
-                    </select>
-                    <div class="clearfix"></div>
                     <input type="text" name="name" id="name" class="half" placeholder="Store Name*" />
                     <input type="text" name="number" id="number" class="half" placeholder="Store Number" />
                     <input type="text" name="street" id="street" class="full" placeholder="Street" />
@@ -474,11 +462,9 @@ function render_grocery_stores_admin_form()
                 </div>
             </div>
 
-            <?php echo $groceryStores->showStores(); ?>
+            <?php echo $groceryStore->showStores(); ?>
 
             <div class="clearfix"></div>
-
-            <div class="hr"></div>
 
             <div id="grocery-list-footer">
                 <p class="submit">

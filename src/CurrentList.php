@@ -6,9 +6,9 @@ class CurrentList extends GroceryList
 {
 
     // Declare properties
-    public $groceries;
+    public $groceries = [];
+    public $isNewIngredient = false;
     public $userId;
-    public $db;
 
 
     /**
@@ -35,93 +35,89 @@ class CurrentList extends GroceryList
         $srlGroceries = get_user_meta($this->userId, '_grocery_list', true);
 
         if (is_null($storeId)) {
-            $this->groceries = maybe_unserialize($srlGroceries);
+            $groceries = maybe_unserialize($srlGroceries);
         } else {
             $masterList = new MasterList();
             $masterStoreList = $masterList->getList($storeId);
 
-            $this->groceries = maybe_unserialize($srlGroceries);
+            $groceries = maybe_unserialize($srlGroceries);
 
-            if (is_array($this->groceries)) {
-                usort($this->groceries, [new SortList($masterStoreList), 'sort']);
+            if (is_array($groceries)) {
+                usort($groceries, [new SortList($masterStoreList), 'sort']);
             }
         }
 
-        return $this->groceries;
+        return $groceries;
     }
 
 
     /**
      * Render the contents of the 'grocery_list' page
-     * @param  int $storeId    Store identifier
+     * @param  int                    $storeId       Store identifier
+     * @param  \SteveSteele\Sanitizer $sanitizer     Dedicated input sanitization object
      *
-     * @return string          Markup
+     * @return string                                Markup
      */
-    public function renderGroceries($storeId)
+    public function renderGroceries($storeId, \SteveSteele\Sanitizer $sanitizer)
     {
         $output = '';
 
-        $this->getList($storeId);
+        $groceries = $this->getList($storeId);
 
-        if (! empty($this->groceries)) {
+        if (! empty($groceries)) {
             // Grab the user master list for this store
             $masterList = new MasterList();
             $arrMaster = $masterList->getList($storeId);
 
-            $unitMap = get_option('_ingredient_units');
-
-            $id = 'i';
-            $amount = 'a';
-            $unit = 'u';
-            $optional = 'o';
-            $pic = 'p';
+            $unitMap = get_option('_ingredient_units_to_singular_names_map');
 
             // Get user store dropdown selection
-            $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . sanitize_input($_GET['sid']) : '';
+            $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . $sanitizer->sanitize($_GET['sid']) : '';
 
             $refreshAlert = false;
             $output .= '<a href="' . site_url() . '/grocery-list/' . $userSelectedStoreUrl . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
 
             $arrNewbies = $masterList->getNewIngredients($storeId);
+            $ingredientTranslator = new IngredientTranslator();
 
             // Flag optional ingredients so the legend will show only when necessary
             $optionalFlag = false;
 
-            foreach ($this->groceries as $item) {
+            foreach ($groceries as $item) {
                 // Make sure the item is represented in the master store list
-                if (! in_array($item[$id], $arrMaster)) {
+                if (! in_array($item[$ingredientTranslator->id], $arrMaster)) {
                     // Not in the master list - prepend it
-                    $masterList->insertNewIngredient($storeId, $item[$id]);
+                    $masterList->insertNewIngredient($storeId, $item[$ingredientTranslator->id]);
                     $refreshAlert = true;
                 }
 
                 // Prepend any item description (usually 'organic')
-                $desc = term_description($item[$id], 'ingredient');
-                $name = tax_ids_to_ingredients([$item[$id]]);
-                $unitName = unit_index_to_name($item[$unit]);
+                $desc = term_description($item[$ingredientTranslator->id], 'ingredient');
+                $name = $ingredientTranslator->fromTaxIds([$item[$ingredientTranslator->id]]);
+                $unitName = $ingredientTranslator->indexToUnitName($item[$ingredientTranslator->unit]);
 
                 // Get single units where necessary
-                if (! stristr($item[$amount], 'to') && ($item[$amount] != 0 && $item[$amount] <= 1)) {
+                if (! stristr($item[$ingredientTranslator->amount], 'to') && ($item[$ingredientTranslator->amount] != 0 && $item[$ingredientTranslator->amount] <= 1)) {
                     $unitName = $unitMap[$unitName];
                 }
 
                 // Get recipe thumbnail
-                $thumb = (isset($item[$pic]) && ! empty($item[$pic])) ? $item[$pic] . ' ' : '';
+                $thumb = (isset($item[$ingredientTranslator->pic]) && ! empty($item[$ingredientTranslator->pic])) ? $item[$ingredientTranslator->pic] . ' ' : '';
 
-                $optionalFlag = ('' !== $item[$optional]) ? true : $optionalFlag;
+                $optionalFlag = ('*' === $item[$ingredientTranslator->optional]) ? true : $optionalFlag;
 
                 // Build the list item
                 $li  = '';
                 $li .= $thumb;
-                $li .= (isset($item[$amount]) && ! empty($item[$amount])) ? $item[$amount] . ' ' : '';
+                $li .= (isset($item[$ingredientTranslator->amount]) && ! empty($item[$ingredientTranslator->amount])) ? $item[$ingredientTranslator->amount] . ' ' : '';
                 $li .= (isset($unitName) && ! empty($unitName)) ? $unitName . ' ' : '';
                 $li .= (isset($desc) && ! empty($desc)) ? strip_tags($desc) . ' ' : '';
-                $li .= $name[0] . $item[$optional] . ' ';
+                $li .= $name[0] . $item[$ingredientTranslator->optional] . ' ';
 
                 // Build necessary classes
                 $liClass = [];
 
-                if (isset($arrNewbies) && is_array($arrNewbies) && in_array($item[$id], $arrNewbies)) {
+                if (isset($arrNewbies) && is_array($arrNewbies) && in_array($item[$ingredientTranslator->id], $arrNewbies)) {
                     $liClass[] = 'new-item';
                 }
 
@@ -131,7 +127,7 @@ class CurrentList extends GroceryList
 
                 $liClasses = implode(' ', $liClass);
 
-                $output .= '<li id="' . $item[$id] . '" class="' . $liClasses . '">';
+                $output .= '<li id="' . $item[$ingredientTranslator->id] . '" class="' . $liClasses . '">';
                 $output .=    $li;
                 $output .= '</li>';
 
@@ -159,20 +155,21 @@ class CurrentList extends GroceryList
 
 
     /**
-     * Save groceries submitted via 'grocery-list' admin page
-     * @return boolean    True if new ingredient added (to alert admin user to refresh the page before creating a new list)
+     * Extract and sanitize groceries from admin page user input
+     * @param  array                  $post         Raw form post
+     * @param  \SteveSteele\Sanitizer $sanitizer    Dedicated input sanitization object
+     *
+     * @return array                                Filled with sanitized input category arrays
+     *                                              ...current items, recipes, ingredients, new ingredients, typical items
      */
-    public function saveGroceries()
+    public function extractSaveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
     {
-        // Declare list array
-        $arrItems = [];
-
         // Define categories and expected input types
         $cats = [
-            'i'             => 'i',                                 // Toggled ingredients from list prior
-            'recipe'        => 'i',                                 // Recipes
-            'ingredient'    => 'i',                                 // Ingredients chosen from 'ingredient' taxonomy terms
-            'newIngredient' => 's',                                 // Unknown ingredient (string, not ID)
+            'i'              => 'i',                                // Toggled ingredients from list prior
+            'recipe'         => 'i',                                // Recipes
+            'ingredient'     => 'i',                                // Ingredients chosen from 'ingredient' taxonomy terms
+            'new_ingredient' => 's',                                // Unknown ingredient (string, not ID)
         ];
 
         // Define category-specific arrays and sanitize user input
@@ -181,38 +178,40 @@ class CurrentList extends GroceryList
             $$cat = [];
 
             // Bail if nothing to fill
-            if (empty($_POST[$cat])) {
+            if (empty($post[$cat])) {
                 continue;
             }
 
-            foreach ($_POST[$cat] as $item) {
-                array_push($$cat, sanitize_input($item, $type));
+            $post[$cat] = $sanitizer->sanitize($post[$cat], $type);
+            foreach ($post[$cat] as $item) {
+                array_push($$cat, $item);
             }
-
         }
 
-        // Merge new ingredients with toggled old ingredients
-        $ingredient = array_merge($i, $ingredient);
-
-        // Merge in typical items with ingredients if toggled
-        if (isset($_POST['typical_items_toggle'])) {
-            $typicalItems = get_typical_list_item_ids();
-            $ingredient = array_unique(array_merge($typicalItems, $ingredient));
+        $typicalItems = [];
+        // Handle typical items
+        if (isset($post['typical_items_toggle'])) {
+            $typicalItems = get_typical_list_item_ids($this->userId);
         }
 
-        $id = 'i';
-        $amount = 'a';
-        $unit = 'u';
-        $type = 't';
-        $optional = 'o';
-        $pic = 'p';
+        return [$i, $recipe, $ingredient, $new_ingredient, $typicalItems];
+    }
 
-        // Handle recipes
-        if (isset($recipe) && ! empty($recipe)) {
-            foreach ($recipe as $r) {
+
+    /**
+     * Add items in recipes to grocery list
+     * @param  array                                       $recipes                 Filled with recipe IDs
+     * @param  \SteveSteele\Groceries\IngredientTranslator $ingredientTranslator    Ingredient translation helper
+     *
+     * @return array                                       Appended user grocery list
+     */
+    private function addGroceriesFromRecipes($recipes, IngredientTranslator $ingredientTranslator)
+    {
+        if (isset($recipes) && ! empty($recipes)) {
+            foreach ($recipes as $recipe) {
                 // Grab recipe thumbnail and meta (including ingredients)
-                $rThumbnail = get_the_post_thumbnail($r, 'icon');
-                $arrMeta = get_post_meta($r);
+                $rThumbnail = get_the_post_thumbnail($recipe, 'icon');
+                $arrMeta = get_post_meta($recipe);
 
                 foreach ($arrMeta as $key => $val) {
                     if (preg_match('/_ingredient_(\d+)/', $key, $match)) {
@@ -225,91 +224,158 @@ class CurrentList extends GroceryList
                         $meta = maybe_unserialize($serializedMeta);
 
                         // Translate unit into unit index
-                        $metaUnit = unit_name_to_index($meta['unit']);
+                        $metaUnit = $ingredientTranslator->unitNameToIndex($meta['unit']);
 
                         // Flag for optional ingredients
                         $isOptional = preg_match('/\(optional\)/', $meta['prep']);
 
                         // Add ingredient to list
-                        $arrItems[] = [
-                            $id       => $ingredientId,
-                            $amount   => $meta['amount'],
-                            $unit     => $metaUnit,
-                            $type     => 'i',
-                            $optional => ($isOptional) ? '*' : '',
-                            $pic      => '<div class="recipe-thumb">' . $rThumbnail . '</div>',
+                        $this->groceries[] = [
+                            $ingredientTranslator->id       => (int) $ingredientId,
+                            $ingredientTranslator->amount   => $meta['amount'],
+                            $ingredientTranslator->unit     => $metaUnit,
+                            $ingredientTranslator->type     => 'i',
+                            $ingredientTranslator->optional => ($isOptional) ? '*' : '',
+                            $ingredientTranslator->pic      => '<div class="recipe-thumb">' . $rThumbnail . '</div>',
                         ];
                     }
                 }
             }
         }
 
-        // Handle known ingredients (taxonomy terms)
-        if (isset($ingredient) && ! empty($ingredient)) {
-            foreach ($ingredient as $i) {
-                $term = get_term($i, 'ingredient', OBJECT);
-
-                $arrItems[] = [
-                    $id       => $term->term_id,
-                    $amount   => 0,
-                    $unit     => 0,
-                    $type     => 'i',
-                    $optional => '',
-                ];
-            }
-        }
-
-        $isNewIngredient = false;
-
-        // Handle unknown ingredients submitted by user (this allows the user to save anything to the list)
-        // ...make unknown ingredients known
-        if (isset($newIngredient) && ! empty($newIngredient)) {
-            foreach ($newIngredient as $n) {
-                if (! empty($n)) {
-                    $isNewIngredient = true;
-
-                    // Add the new ingredient to our list of terms
-                    $termId = wp_insert_term($n, 'ingredient');
-
-                    if (! empty($termId) && is_array($termId)) {
-                        $arrItems[] = [
-                            $id         => $termId['term_id'],
-                            $amount     => 0,
-                            $unit       => 0,
-                            $type       => 'i',
-                        ];
-                    }
-                }
-            }
-        }
-
-        $this->setList($arrItems);
-
-        return $isNewIngredient;
+        return $this->groceries;
     }
 
 
     /**
-     * Render previously saved items to admin page
+     * Add new items to grocery list
+     * @param  array                                       $ingredients             Filled with ingredient IDs
+     * @param  \SteveSteele\Groceries\IngredientTranslator $ingredientTranslator    Ingredient translation helper
+     *
+     * @return array                                       Appended user grocery list
+     */
+    private function addGroceriesFromIngredients($ingredients, IngredientTranslator $ingredientTranslator)
+    {
+        // Handle known ingredients (taxonomy terms)
+        if (isset($ingredients) && ! empty($ingredients)) {
+            foreach ($ingredients as $ingredient) {
+                $term = get_term($ingredient, 'ingredient', OBJECT);
+
+                $this->groceries[] = [
+                    $ingredientTranslator->id       => $term->term_id,
+                    $ingredientTranslator->amount   => '',
+                    $ingredientTranslator->unit     => false,
+                    $ingredientTranslator->type     => 'i',
+                    $ingredientTranslator->optional => '',
+                    $ingredientTranslator->pic      => '',
+                ];
+            }
+        }
+
+        return $this->groceries;
+    }
+
+
+    /**
+     * Add new items to grocery list
+     * @param  array                                       $newIngredients          Filled with new ingredient strings
+     * @param  \SteveSteele\Groceries\IngredientTranslator $ingredientTranslator    Ingredient translation helper
+     *
+     * @return array                                       Appended user grocery list
+     */
+    private function addGroceriesFromNewIngredients($newIngredients, IngredientTranslator $ingredientTranslator)
+    {
+        // Handle unknown ingredients submitted by user (this allows the user to save anything to the list)
+        if (isset($newIngredients) && ! empty($newIngredients)) {
+            foreach ($newIngredients as $newIngredient) {
+                if (! empty($newIngredient)) {
+                    // Add the new ingredient to our list of terms
+                    if (user_can($this->userId, INGREDIENT_TAG_CREATE_CAPABILITY)) {
+                        $termId = wp_insert_term($newIngredient, 'ingredient');
+                        $this->isNewIngredient = true;
+
+                        if (! empty($termId) && is_array($termId)) {
+                            $this->groceries[] = [
+                                $ingredientTranslator->id       => $termId['term_id'],
+                                $ingredientTranslator->amount   => '',
+                                $ingredientTranslator->unit     => false,
+                                $ingredientTranslator->type     => 'i',
+                                $ingredientTranslator->optional => '',
+                                $ingredientTranslator->pic      => '',
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $this->groceries;
+    }
+
+
+    /**
+     * Save groceries submitted via 'grocery-list' admin page
+     * @param  array                  $post         Raw form post
+     * @param  \SteveSteele\Sanitizer $sanitizer    Dedicated input sanitization object
+     *
+     * @return boolean                              True if new ingredient added (to alert admin user to refresh the page before creating a new list)
+     */
+    public function saveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
+    {
+        // Extract post data
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $this->extractSaveGroceries($post, $sanitizer);
+
+        // Merge ingredients
+        $ingredients = array_unique(array_merge($currentItems, $ingredients));
+        $ingredients = array_unique(array_merge($typicalItems, $ingredients));
+
+        // Compile groceries
+        $ingredientTranslator = new IngredientTranslator();
+        $this->addGroceriesFromRecipes($recipes, $ingredientTranslator);
+        $this->addGroceriesFromIngredients($ingredients, $ingredientTranslator);
+        $this->addGroceriesFromNewIngredients($newIngredients, $ingredientTranslator);
+
+        $this->setList($this->groceries);
+
+        return $this->isNewIngredient;
+    }
+
+
+    /**
+     * Render previously saved grocery items to admin page
+     * @param  array  $groceries    Grocery items
+     *
+     * @return string               Markup
+     */
+    public function renderExistingAdminList($groceries = [])
+    {
+        $output = '';
+
+        $ingredientTranslator = new IngredientTranslator();
+        if (! empty($groceries)) {
+            foreach ($groceries as $item) {
+                $name = $ingredientTranslator->fromTaxIds([$item['i']]);
+                if ($name = array_shift($name)) {
+                    $output .= '<li>';
+                    $output .=     '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
+                    $output .=     '<label for="' . $item['i'] . '"> ' . $name . '</label>';
+                    $output .= '</li>';
+                }
+            }
+        }
+
+        return $output;
+    }
+
+
+    /**
+     * Render previously saved grocery items to admin page (wrapper)
      *
      * @return string    Markup
      */
     public function existingAdminList()
     {
-        $output = '';
-        $this->getList();
-
-        if (! empty($this->groceries)) {
-            foreach ($this->groceries as $item) {
-                $name = tax_ids_to_ingredients([$item['i']]);
-
-                $output .= '<li>';
-                $output .=     '<input type="checkbox" name="' .  $item['t'] . '[]" id="' . $item['i'] . '" value="' . $item['i'] . '" />';
-                $output .=     '<label for="' . $item['i'] . '"> ' . $name[0] . '</label>';
-                $output .= '</li>';
-            }
-        }
-
-        return $output;
+        $groceries = $this->getList();
+        return $this->renderExistingAdminList($groceries);
     }
 }

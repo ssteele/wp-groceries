@@ -9,6 +9,10 @@ class SortList
     public $masterStoreList;
 
 
+    /**
+     * SortList constructor
+     * @param arr $masterStoreList    List of sorted grocery items for a store
+     */
     public function __construct($masterStoreList)
     {
         $this->masterStoreList = $masterStoreList;
@@ -17,6 +21,9 @@ class SortList
 
     /**
      * Sort current grocery list wrapper
+     * @param  arr $a    Meta information for first item in comparison
+     * @param  arr $b    Meta information for second item in comparison
+     *
      * @return int  0 if $a == $b, -1 if $a < $b or +1 if $a > $b
      */
     public function sort($a, $b)
@@ -27,6 +34,9 @@ class SortList
 
     /**
      * Sort current grocery list by aisle (from master list)
+     * @param  arr $a    Meta information for first item in comparison
+     * @param  arr $b    Meta information for second item in comparison
+     *
      * @return int  0 if $a == $b, -1 if $a < $b or +1 if $a > $b
      */
     private function orderCurrentList($a, $b, $masterStoreList)

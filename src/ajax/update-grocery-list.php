@@ -22,7 +22,7 @@ require_once '../../../../../wp-load.php';
 
 $userId = get_current_user_id();
 
-if (! user_can($userId, 'manage_options')) {
+if (! user_can($userId, GROCERY_LIST_CAPABILITY)) {
     $response['status'] = 'error';
     $response['message'] = 'Error: You must log in to make updates';
     echo json_encode($response);
@@ -33,7 +33,7 @@ if (! user_can($userId, 'manage_options')) {
 $postVars = ['s', 'a', 'i', 'b'];
 
 foreach ($postVars as $p) {
-    $$p = sanitize_input($_POST[$p], 's');
+    $$p = shsSanitize($_POST[$p], 's');
     $$p = (is_string($$p)) ? intval($$p) : $$p;
 }
 
