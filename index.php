@@ -18,6 +18,8 @@ use SteveSteele\Sanitizer;
 
 require_once 'vendor/autoload.php';
 
+const SHS_GROCERY_LIST_PLUGIN_NAME = 'SHS Grocery List';
+
 // https://codex.wordpress.org/Roles_and_Capabilities#Capability_vs._Role_Table
 const GROCERY_LIST_CAPABILITY = 'read';                             // everyone can, no one cannot (previously 'manage_options')
 const INGREDIENT_TAG_CREATE_CAPABILITY = 'manage_categories';       // editor's can, authors cannot
@@ -28,10 +30,7 @@ const INGREDIENT_TAG_CREATE_CAPABILITY = 'manage_categories';       // editor's 
  */
 function shs_grocery_list_install()
 {
-    // Check to make sure 'Recipes' is activated
-    if (! function_exists('shs_save_recipe')) {
-        wp_die('This plugin depends on functionality from the \'Recipes\' plugin');
-    }
+    areGroceryListDependenciesEnabled(false);
 
     add_option('shs_grocery_list_version', '1.0');
     add_option('shs_grocery_list_id', 'SHS-GroceryList-' . time());
@@ -117,6 +116,40 @@ register_activation_hook(__FILE__, 'shs_grocery_list_install');
 
 
 /**
+ * Determine if plugin dependencies are enabled
+ * @param  bool $allowPluginManagement    If true, allows requests to plugin management admin page
+ * @return bool                           True if all dependencies are enabled; False otherwise
+ */
+function areGroceryListDependenciesEnabled($allowPluginManagement = true)
+{
+    // Specify plugin dependencies and function to check if existing
+    $dependencies = [
+        'SHS Recipes'  => 'shs_save_recipe',
+        'SHS Sanitize' => 'shsSanitize',
+    ];
+
+    // Get current URL
+    $currentUrl = site_url() . $_SERVER['REQUEST_URI'];
+
+    // Get plugin admin page URL
+    $pluginsPageUrl = admin_url('plugins.php');
+
+    // Determine if user is requesting plugin admin page URL
+    $isRequestingPluginsPage = preg_match("|$pluginsPageUrl|", $currentUrl);
+
+    foreach ($dependencies as $plugin => $function) {
+        if (! function_exists($function) && ! ($allowPluginManagement && $isRequestingPluginsPage)) {
+            $message = '`' . SHS_GROCERY_LIST_PLUGIN_NAME . '` depends on functionality from the `' . $plugin . '` plugin.<br /><br />';
+            if ($allowPluginManagement) {
+                $message .= '<a href="' . $pluginsPageUrl . '">Click here</a> to enable `' . $plugin . '`.';
+            }
+            wp_die($message);
+        }
+    }
+}
+
+
+/**
  * Create shortcode to access grocery list object methods
  * @param  array $atts    Shortcode args passed in from admin page
  */
@@ -192,6 +225,8 @@ function get_typical_list_item_ids($userId = null)
  */
 function register_grocery_list_admin_pages()
 {
+    areGroceryListDependenciesEnabled();
+
     add_submenu_page(
         'edit.php?post_type=recipe',
         'Manage Grocery Stores',
