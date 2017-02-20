@@ -62,4 +62,50 @@ class IngredientTest extends \PHPUnit_Framework_TestCase
         $unitIndex = $ingredients->unitNameToIndex($unitName);
         $this->assertEquals($expectedIndex, $unitIndex);
     }
+
+    public function testIndexToUnitName()
+    {
+        // mock ingredient unit list
+        $ingredientUnitList = [
+            '',
+            'a',
+            'an',
+            'cloves',
+            'cups',
+            'heads',
+            'large',
+            'medium',
+            'ounces',
+            'packages',
+            'pinches',
+            'pounds',
+            'small',
+            'spears',
+            'squeezes',
+            'tablespoons',
+            'teaspoons',
+        ];
+        WP_Mock::wpFunction('get_option', [
+            'args' => '_ingredient_unit_list',
+            'times' => 3,
+            'return' => $ingredientUnitList,
+        ]);
+
+        $ingredients = new Ingredients();
+
+        $unitIndex = 13;
+        $expectedName = 'spears';
+        $unitName = $ingredients->indexToUnitName($unitIndex);
+        $this->assertEquals($expectedName, $unitName);
+
+        $unitIndex = 3;
+        $expectedName = 'cloves';
+        $unitName = $ingredients->indexToUnitName($unitIndex);
+        $this->assertEquals($expectedName, $unitName);
+
+        $unitIndex = 12;
+        $expectedName = 'small';
+        $unitName = $ingredients->indexToUnitName($unitIndex);
+        $this->assertEquals($expectedName, $unitName);
+    }
 }
