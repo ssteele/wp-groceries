@@ -1,5 +1,5 @@
 {
-    "name": "ssteele/GroceryList",
+    "name": "ssteele/grocery-list",
     "description": "Grocery List generation and rendering functionality for harvillesteele.com",
     "license": "MIT",
     "keywords": ["grocery list, harvillesteele"],
