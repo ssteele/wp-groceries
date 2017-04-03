@@ -164,6 +164,10 @@ class CurrentList extends GroceryList
      */
     public function extractSaveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
     {
+        if (! isset($post)) {
+            return false;
+        }
+
         // Define categories and expected input types
         $cats = [
             'i'              => 'i',                                // Toggled ingredients from list prior
@@ -322,6 +326,11 @@ class CurrentList extends GroceryList
      */
     public function saveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
     {
+        if (! isset($post) || count($post) <= 1) {
+            // prevent empty list
+            return false;
+        }
+
         // Extract post data
         list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $this->extractSaveGroceries($post, $sanitizer);
 
