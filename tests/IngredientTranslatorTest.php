@@ -1,22 +1,12 @@
 <?php
 
-namespace SteveSteele\Groceries;
+namespace SteveSteele\GroceriesTest;
 
+use SteveSteele\Groceries\IngredientTranslator;
 use WP_Mock;
 
-class IngredientTranslatorTest extends \PHPUnit_Framework_TestCase
+class IngredientTranslatorTest extends BaseTestCase
 {
-
-    public function setUp()
-    {
-        WP_Mock::setUp();
-    }
-
-    public function tearDown()
-    {
-        WP_Mock::tearDown();
-    }
-
     public function testUnitNameToIndex()
     {
         // mock ingredient unit list
@@ -39,7 +29,7 @@ class IngredientTranslatorTest extends \PHPUnit_Framework_TestCase
             'tablespoons',
             'teaspoons',
         ];
-        WP_Mock::wpFunction('get_option', [
+        WP_Mock::userFunction('get_option', [
             'args' => '_ingredient_unit_list',
             'times' => 3,
             'return' => $ingredientUnitList,
@@ -85,7 +75,7 @@ class IngredientTranslatorTest extends \PHPUnit_Framework_TestCase
             'tablespoons',
             'teaspoons',
         ];
-        WP_Mock::wpFunction('get_option', [
+        WP_Mock::userFunction('get_option', [
             'args' => '_ingredient_unit_list',
             'times' => 3,
             'return' => $ingredientUnitList,

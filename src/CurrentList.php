@@ -2,9 +2,11 @@
 
 namespace SteveSteele\Groceries;
 
+use SteveSteele\Groceries\IngredientTranslator;
+use SteveSteele\TypeSanity\UserInput;
+
 class CurrentList extends GroceryList
 {
-
     // Declare properties
     public $groceries = [];
     public $isNewIngredient = false;
@@ -53,12 +55,12 @@ class CurrentList extends GroceryList
 
     /**
      * Render the contents of the 'grocery_list' page
-     * @param  int                    $storeId       Store identifier
-     * @param  \SteveSteele\Sanitizer $sanitizer     Dedicated input sanitization object
+     * @param  int       $storeId       Store identifier
+     * @param  UserInput $translator    Dedicated input sanitization object
      *
-     * @return string                                Markup
+     * @return string                   Markup
      */
-    public function renderGroceries($storeId, \SteveSteele\Sanitizer $sanitizer)
+    public function renderGroceries($storeId, UserInput $translator)
     {
         $output = '';
 
@@ -72,13 +74,16 @@ class CurrentList extends GroceryList
             $unitMap = get_option('_ingredient_units_to_singular_names_map');
 
             // Get user store dropdown selection
-            $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . $sanitizer->sanitize($_GET['sid']) : '';
+            $userSelectedStoreUrl = (isset($_GET['sid']) && ! empty($_GET['sid'])) ? '?sid=' . $translator->sanitize($_GET['sid']) : '';
 
             $refreshAlert = false;
             $output .= '<a href="' . site_url() . '/grocery-list/' . $userSelectedStoreUrl . '"><li id="notify_new">New items added: Please click here before shopping!</li></a>';
 
             $arrNewbies = $masterList->getNewIngredients($storeId);
             $ingredientTranslator = new IngredientTranslator();
+
+            // Get items flagged as unavailable for specified store
+            $unavailableStoreItems = get_unavailable_item_ids_for_store($this->userId, $storeId);
 
             // Flag optional ingredients so the legend will show only when necessary
             $optionalFlag = false;
@@ -121,6 +126,10 @@ class CurrentList extends GroceryList
                     $liClass[] = 'new-item';
                 }
 
+                if (in_array($item['i'], $unavailableStoreItems)) {
+                    $liClass[] = 'unavailable-store-item';
+                }
+
                 if (! empty($thumb)) {
                     $liClass[] = 'has-thumb';
                 }
@@ -156,13 +165,13 @@ class CurrentList extends GroceryList
 
     /**
      * Extract and sanitize groceries from admin page user input
-     * @param  array                  $post         Raw form post
-     * @param  \SteveSteele\Sanitizer $sanitizer    Dedicated input sanitization object
+     * @param  array     $post          Raw form post
+     * @param  UserInput $translator    Dedicated input sanitization object
      *
-     * @return array                                Filled with sanitized input category arrays
-     *                                              ...current items, recipes, ingredients, new ingredients, typical items
+     * @return array                    Filled with sanitized input category arrays
+     *                                  ...current items, recipes, ingredients, new ingredients, typical items
      */
-    public function extractSaveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
+    public function extractSaveGroceries($post, UserInput $translator)
     {
         if (! isset($post)) {
             return false;
@@ -186,7 +195,7 @@ class CurrentList extends GroceryList
                 continue;
             }
 
-            $post[$cat] = $sanitizer->sanitize($post[$cat], $type);
+            $post[$cat] = $translator->sanitize($post[$cat], $type);
             foreach ($post[$cat] as $item) {
                 array_push($$cat, $item);
             }
@@ -204,10 +213,10 @@ class CurrentList extends GroceryList
 
     /**
      * Add items in recipes to grocery list
-     * @param  array                                       $recipes                 Filled with recipe IDs
-     * @param  \SteveSteele\Groceries\IngredientTranslator $ingredientTranslator    Ingredient translation helper
+     * @param  array                $recipes                 Filled with recipe IDs
+     * @param  IngredientTranslator $ingredientTranslator    Ingredient translation helper
      *
-     * @return array                                       Appended user grocery list
+     * @return array                                         Appended user grocery list
      */
     private function addGroceriesFromRecipes($recipes, IngredientTranslator $ingredientTranslator)
     {
@@ -253,10 +262,10 @@ class CurrentList extends GroceryList
 
     /**
      * Add new items to grocery list
-     * @param  array                                       $ingredients             Filled with ingredient IDs
-     * @param  \SteveSteele\Groceries\IngredientTranslator $ingredientTranslator    Ingredient translation helper
+     * @param  array                $ingredients             Filled with ingredient IDs
+     * @param  IngredientTranslator $ingredientTranslator    Ingredient translation helper
      *
-     * @return array                                       Appended user grocery list
+     * @return array                                         Appended user grocery list
      */
     private function addGroceriesFromIngredients($ingredients, IngredientTranslator $ingredientTranslator)
     {
@@ -282,10 +291,10 @@ class CurrentList extends GroceryList
 
     /**
      * Add new items to grocery list
-     * @param  array                                       $newIngredients          Filled with new ingredient strings
-     * @param  \SteveSteele\Groceries\IngredientTranslator $ingredientTranslator    Ingredient translation helper
+     * @param  array                $newIngredients          Filled with new ingredient strings
+     * @param  IngredientTranslator $ingredientTranslator    Ingredient translation helper
      *
-     * @return array                                       Appended user grocery list
+     * @return array                                         Appended user grocery list
      */
     private function addGroceriesFromNewIngredients($newIngredients, IngredientTranslator $ingredientTranslator)
     {
@@ -319,12 +328,12 @@ class CurrentList extends GroceryList
 
     /**
      * Save groceries submitted via 'grocery-list' admin page
-     * @param  array                  $post         Raw form post
-     * @param  \SteveSteele\Sanitizer $sanitizer    Dedicated input sanitization object
+     * @param  array     $post          Raw form post
+     * @param  UserInput $translator    Dedicated input sanitization object
      *
-     * @return boolean                              True if new ingredient added (to alert admin user to refresh the page before creating a new list)
+     * @return boolean                  True if new ingredient added (to alert admin user to refresh the page before creating a new list)
      */
-    public function saveGroceries($post, \SteveSteele\Sanitizer $sanitizer)
+    public function saveGroceries($post, UserInput $translator)
     {
         if (! isset($post) || count($post) <= 1) {
             // prevent empty list
@@ -332,7 +341,7 @@ class CurrentList extends GroceryList
         }
 
         // Extract post data
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $this->extractSaveGroceries($post, $sanitizer);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $this->extractSaveGroceries($post, $translator);
 
         // Merge ingredients
         $ingredients = array_unique(array_merge($currentItems, $ingredients));

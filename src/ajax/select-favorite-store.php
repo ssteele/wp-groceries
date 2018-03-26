@@ -2,6 +2,8 @@
 
 namespace SteveSteele\Groceries;
 
+use SteveSteele\TypeSanity\UserInput;
+
 // http://shs.harvillesteele.com:8888/content/plugins/shs-grocery-list/src/ajax/select-favorite-store.php
 
 $response = [
@@ -28,11 +30,13 @@ if (! user_can($userId, GROCERY_LIST_CAPABILITY)) {
     die();
 }
 
+$translator = new UserInput();
+
 // grab the post variables
 $postVars = ['store_id'];
 
 foreach ($postVars as $p) {
-    $$p = shsSanitize($_POST[$p], 's');
+    $$p = $translator->sanitize($_POST[$p], 's');
 }
 
 // isolate store ID

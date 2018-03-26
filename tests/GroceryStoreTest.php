@@ -1,10 +1,11 @@
 <?php
 
-namespace SteveSteele\Groceries;
+namespace SteveSteele\GroceriesTest;
 
-class GroceryStoreTest extends \PHPUnit_Framework_TestCase
+use SteveSteele\Groceries\GroceryStore;
+
+class GroceryStoreTest extends BaseTestCase
 {
-
     public function testIsExistingStore()
     {
         // setup

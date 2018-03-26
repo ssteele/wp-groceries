@@ -12,9 +12,10 @@ To turn this into an actual WP plugin, all of the javascript that pertains to th
 */
 
 use SteveSteele\Groceries\TypicalListItem;
+use SteveSteele\Groceries\UnavailableStoreItem;
 use SteveSteele\Groceries\GroceryStore;
 use SteveSteele\Groceries\CurrentList;
-use SteveSteele\Sanitizer;
+use SteveSteele\TypeSanity\UserInput;
 
 require_once 'vendor/autoload.php';
 
@@ -59,16 +60,35 @@ function shs_grocery_list_install()
         dbDelta($sql);
     }
 
-    // Add table to reset to a grocery list to typical items (specified on taxonomy term page)
-    $tableName = $wpdb->prefix . 'term_taxonomy_extended';
+    // Add table to reset a grocery list with typical items (specified on taxonomy term page)
+    $tableName = $wpdb->prefix . 'term_taxonomy_typical';
 
     if ($wpdb->get_var("SHOW TABLES LIKE '$tableName'") != $tableName) {
-        // Code to generate table
         $sql = "CREATE TABLE $tableName (
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id BIGINT(20) UNSIGNED NOT NULL,
         term_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
-        typical_list_item TINYINT(1) NOT NULL DEFAULT 0,
+        is_typical TINYINT(1) NOT NULL DEFAULT 0,
+        PRIMARY KEY (id),
+        KEY term_id (term_id)
+        );";
+
+        // Import a file we need to call dbDelta function
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+        // Run the SQL
+        dbDelta($sql);
+    }
+
+    // Add table to flag items that are unavailable in a user's store
+    $tableName = $wpdb->prefix . 'term_taxonomy_unavailable';
+
+    if ($wpdb->get_var("SHOW TABLES LIKE '$tableName'") != $tableName) {
+        $sql = "CREATE TABLE $tableName (
+        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id BIGINT(20) UNSIGNED NOT NULL,
+        term_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+        store_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
         PRIMARY KEY (id),
         KEY term_id (term_id)
         );";
@@ -125,7 +145,6 @@ function areGroceryListDependenciesEnabled($allowPluginManagement = true)
     // Specify plugin dependencies and function to check if existing
     $dependencies = [
         'SHS Recipes'  => 'shs_save_recipe',
-        'SHS Sanitize' => 'shsSanitize',
     ];
 
     // Get current URL
@@ -171,7 +190,7 @@ add_shortcode('groceries', 'grocery_list_shortcode');
 
 
 /**
- * Save typical grocery list item status (wrapper)
+ * Save typical grocery list item status
  *
  * @param  integer  $userId    WP user id
  * @param  integer  $termId    Taxonomy term ID
@@ -181,7 +200,7 @@ add_shortcode('groceries', 'grocery_list_shortcode');
 function save_typical_list_item_status($userId = null, $termId = null)
 {
     if ($userId && $termId) {
-        $isTypical = isset($_POST['is_typical']) ? $_POST['is_typical'] : 0;
+        $isTypical = isset($_POST['is_typical']) ? 1 : 0;
         $typicalListItem = new TypicalListItem($userId);
         $typicalListItem->save($termId, $isTypical);
     }
@@ -189,7 +208,7 @@ function save_typical_list_item_status($userId = null, $termId = null)
 
 
 /**
- * Get typical list item status (wrapper)
+ * Get typical list item status
  *
  * @param  integer  $userId    WP user id
  * @param  string   $termId    Taxonomy term ID
@@ -200,22 +219,72 @@ function get_typical_list_item_status($userId = null, $termId = null)
 {
     if ($userId && $termId) {
         $typicalListItem = new TypicalListItem($userId);
-        return $typicalListItem->getStatus($termId);
+        return $typicalListItem->getIsTypical($termId);
     }
 }
 
 
 /**
- * Get typical list items (wrapper)
+ * Get typical list items
  * @param integer $userId    WP user id
  *
- * @return array             Filled with extended taxonomy objects
+ * @return array             Filled with typical taxonomy DB objects
  */
 function get_typical_list_item_ids($userId = null)
 {
     if ($userId) {
         $typicalListItem = new TypicalListItem($userId);
         return $typicalListItem->getIds();
+    }
+}
+
+
+/**
+ * Save store IDs where item is unavailable
+ *
+ * @param  integer  $userId    WP user id
+ * @param  integer  $termId    Taxonomy term ID
+ *
+ * @return void
+ */
+function save_store_ids_where_item_unavailable($userId = null, $termId = null)
+{
+    if ($userId && $termId) {
+        $storeIds = (isset($_POST['is_unavailable'])) ? $_POST['is_unavailable'] : [];
+        $unavailableStoreItem = new UnavailableStoreItem($userId);
+        $unavailableStoreItem->save($termId, $storeIds);
+    }
+}
+
+
+/**
+ * Get store IDs where item is unavailable
+ *
+ * @param  integer  $userId    WP user id
+ * @param  string   $termId    Taxonomy term ID
+ *
+ * @return array               Store IDs where item is unavailable
+ */
+function get_store_ids_where_item_unavailable($userId = null, $termId = null)
+{
+    if ($userId && $termId) {
+        $unavailableStoreItem = new UnavailableStoreItem($userId);
+        return $unavailableStoreItem->getStoreIds($termId);
+    }
+}
+
+
+/**
+ * Get unavailable items for a store
+ * @param integer $storeId    Store ID
+ *
+ * @return array              Item IDs not available in store
+ */
+function get_unavailable_item_ids_for_store($userId = null, $storeId = null)
+{
+    if ($storeId) {
+        $unavailableStoreItem = new UnavailableStoreItem($userId);
+        return $unavailableStoreItem->getItemIds($storeId);
     }
 }
 
@@ -289,8 +358,8 @@ function the_groceries()
 
                 // Get existing list items
                 $currentList = new CurrentList();
-                $sanitizer = new Sanitizer();
-                echo $currentList->renderGroceries($groceryStore->id, $sanitizer);
+                $userInput = new UserInput();
+                echo $currentList->renderGroceries($groceryStore->id, $userInput);
 
                 ?>
 
@@ -320,8 +389,8 @@ function render_grocery_list_admin_form()
     $currentList = new CurrentList();
 
     if (isset($_POST['submit'])) {
-        $sanitizer = new Sanitizer();
-        $isNewIngredient = $currentList->saveGroceries($_POST, $sanitizer);
+        $userInput = new UserInput();
+        $isNewIngredient = $currentList->saveGroceries($_POST, $userInput);
 
         ?>
 

@@ -1,5 +1,5 @@
 {
-    "name": "ssteele/grocery-list",
+    "name": "ssteele/GroceryList",
     "description": "Grocery List generation and rendering functionality for harvillesteele.com",
     "license": "MIT",
     "keywords": ["grocery list, harvillesteele"],
@@ -10,15 +10,21 @@
         }
     ],
     "require": {
-        "php": ">=7.0.0"
+        "php": ">=7.0.0",
+        "ssteele/wp-typesanity": "1.0.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "5.*",
-        "10up/wp_mock": "0.2.*"
+        "phpunit/phpunit": "6.*",
+        "10up/wp_mock": "0.3.*"
     },
     "autoload": {
         "psr-4": {
             "SteveSteele\\Groceries\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SteveSteele\\GroceriesTest\\": "tests"
         }
     }
 }

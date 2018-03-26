@@ -1,10 +1,11 @@
 <?php
 
-namespace SteveSteele\Groceries;
+namespace SteveSteele\GroceriesTest;
 
-class TypicalListItemTest extends \PHPUnit_Framework_TestCase
+use SteveSteele\Groceries\TypicalListItem;
+
+class TypicalListItemTest extends BaseTestCase
 {
-
     public function testFetchStatus()
     {
         // setup
@@ -12,15 +13,15 @@ class TypicalListItemTest extends \PHPUnit_Framework_TestCase
         $typicalListItem = new TypicalListItem($userId);
 
         $item = [
-            'id'                => '1',
-            'term_id'           => '107',
-            'typical_list_item' => '1',
+            'id'         => '1',
+            'term_id'    => '107',
+            'is_typical' => '1',
         ];
         $item = (object) $item;
 
         // expected first store is returned
         $expected = '1';
-        $returned = $typicalListItem->fetchStatus([$item]);         // note: item is wrapped inside array here
+        $returned = $typicalListItem->pluckIsTypical([$item]);      // note: item is wrapped inside array here
         $this->assertEquals($expected, $returned);
     }
 
@@ -32,25 +33,25 @@ class TypicalListItemTest extends \PHPUnit_Framework_TestCase
 
         $typicalItems = [
             (object) [
-                'id'                => '1',
-                'term_id'           => '107',
-                'typical_list_item' => '1',
+                'id'         => '1',
+                'term_id'    => '107',
+                'is_typical' => '1',
             ],
             (object) [
-                'id'                => '2',
-                'term_id'           => '73',
-                'typical_list_item' => '1',
+                'id'         => '2',
+                'term_id'    => '73',
+                'is_typical' => '1',
             ],
             (object) [
-                'id'                => '999',
-                'term_id'           => '999',
-                'typical_list_item' => '1',
+                'id'         => '999',
+                'term_id'    => '999',
+                'is_typical' => '1',
             ],
         ];
 
         // expected first store is returned
         $expected = ['107', '73', '999'];
-        $returned = $typicalListItem->fetchIds($typicalItems);
+        $returned = $typicalListItem->pluckIds($typicalItems);
         $this->assertEquals($expected, $returned);
     }
 }

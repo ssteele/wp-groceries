@@ -1,10 +1,11 @@
 <?php
 
-namespace SteveSteele\Groceries;
+namespace SteveSteele\GroceriesTest;
 
-class MasterListTest extends \PHPUnit_Framework_TestCase
+use SteveSteele\Groceries\MasterList;
+
+class MasterListTest extends BaseTestCase
 {
-
     public function testHandleStoreItemReordering()
     {
         $userId = 1;

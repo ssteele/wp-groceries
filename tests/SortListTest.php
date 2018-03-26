@@ -1,10 +1,11 @@
 <?php
 
-namespace SteveSteele\Groceries;
+namespace SteveSteele\GroceriesTest;
 
-class SortListTest extends \PHPUnit_Framework_TestCase
+use SteveSteele\Groceries\SortList;
+
+class SortListTest extends BaseTestCase
 {
-
     public function testSort()
     {
         // create items

@@ -2,74 +2,29 @@
 
 namespace SteveSteele\Groceries;
 
-class GroceryStore
-{
+use SteveSteele\TypeSanity\UserInput;
 
+class GroceryStore extends BaseSetter
+{
     // Declare properties
     public $id;
     public $userId;
     public $db;
     public $idForGuestUse = 1;
     public $isGuest = false;
+    public $translator;
 
 
-    /**
-     * Construct method
-     * @param integer $userId    WP user id
-     * @param object  $db        Probably $wpdb, but open to new things
-     *
-     * @return void
-     */
     public function __construct($userId = null, $db = null)
     {
-        $this->setUser($userId);
-        $this->setDb($db);
+        parent::__construct($userId, $db);
+        $this->translator = new UserInput();
     }
-
-
-    /**
-     * Set user
-     *
-     * @param integer $userId    WP user id
-     *
-     * @return void
-     */
-    protected function setUser($userId = null)
-    {
-        if (! isset($userId)) {
-            $userId = get_current_user_id();
-            if (! $userId) {
-                $userId = $this->idForGuestUse;
-                $this->isGuest = true;
-            }
-        }
-
-        $this->userId = $userId;
-    }
-
-
-    /**
-     * Set DB
-     *
-     * @param object $db    Probably $wpdb, but open to new things
-     *
-     * @return void
-     */
-    protected function setDb($db = null)
-    {
-        if (! isset($db)) {
-            // assume wpdb
-            global $wpdb;
-            $db = $wpdb;
-        }
-
-        $this->db = $db;
-    }
-
 
     /**
      * Save new and existing user stores
      * @param int $storeId    Store identifier
+     * @return void
      */
     private function setStore($storeId = null)
     {
@@ -83,7 +38,7 @@ class GroceryStore
             $var = ($isNew) ? $p : $p . '_' . $storeId;
 
             if (isset($_POST[$var]) && ! empty($_POST[$var])) {
-                $$p = shsSanitize($_POST[$var], 's');
+                $$p = $this->translator->sanitize($_POST[$var], 's');
             } else {
                 $$p = '';
             }
@@ -156,7 +111,6 @@ class GroceryStore
 
     /**
      * Check if user has saved store(s)
-     *
      * @return bool    True if user has saved store(s); False otherwise
      */
     public function exists()
@@ -188,6 +142,7 @@ class GroceryStore
 
     /**
      * Handle user input from store wp-admin page
+     * @return void
      */
     public function saveStores()
     {
@@ -201,7 +156,7 @@ class GroceryStore
         // Save existing store modifications
         if (! empty($arrStoreIds)) {
             foreach ($arrStoreIds as $id) {
-                $storeId = shsSanitize($id, 'i');
+                $storeId = $this->translator->sanitize($id, 'i');
                 $this->setStore($storeId);
             }
         }
@@ -211,7 +166,6 @@ class GroceryStore
     /**
      * Handle store deletion
      * @param  int   $storeId    Store identifier
-     *
      * @return bool    True if deleted; False otherwise
      */
     public function deleteStore($storeId = null)
@@ -238,7 +192,6 @@ class GroceryStore
      * Verify that a store exists
      * @param  arr   $stores     Existing user stores
      * @param  int   $storeId    Store identifier
-     *
      * @return bool    True if exists; False otherwise
      */
     public function isExistingStore($stores = [], $storeId = null)
@@ -259,7 +212,6 @@ class GroceryStore
     /**
      * Set user favorite store
      * @param  int   $storeId    Store identifier
-     *
      * @return void
      */
     private function setFavoriteStore($storeId)
@@ -271,7 +223,6 @@ class GroceryStore
     /**
      * Set user favorite store
      * @param  int   $storeId    Store identifier
-     *
      * @return void
      */
     public function saveFavoriteStore($storeId = null)
@@ -285,7 +236,6 @@ class GroceryStore
     /**
      * Return user favorite store
      * @param  arr   $stores     Existing user stores
-     *
      * @return int               Favorite store identifier or false if not selected
      */
     private function getFavoriteStore($stores = [])
@@ -305,7 +255,6 @@ class GroceryStore
     /**
      * Return favorite user store
      * @param  arr   $stores     Existing user stores
-     *
      * @return int               Favorite store identifier or false if not selected
      */
     public function getFirstStore($stores = [])
@@ -321,7 +270,6 @@ class GroceryStore
     /**
      * Return default user store
      * @param  arr   $stores     Existing user stores
-     *
      * @return int               Default store identifier
      */
     private function getDefaultStore($stores = [])
@@ -337,7 +285,6 @@ class GroceryStore
 
     /**
      * Render stores in wp-admin
-     *
      * @return string    Markup
      */
     public function showStores()
@@ -388,12 +335,13 @@ class GroceryStore
 
     /**
      * Allow user to select a store from the front-end grocery list dropdown
+     * @return void
      */
     private function selectStore()
     {
         if (isset($_GET['sid']) && ! empty($_GET['sid'])) {
             // Select from store dropdown
-            $this->id = shsSanitize($_GET['sid'], 'i');
+            $this->id = $this->translator->sanitize($_GET['sid'], 'i');
         } else {
             // Get user default (favorite if selected)
             $stores = $this->getStores();
@@ -404,7 +352,6 @@ class GroceryStore
 
     /**
      * Render store dropdown to grocery list (front-end) page
-     *
      * @return string    Markup
      */
     public function renderStoreDropdown()
@@ -473,6 +420,7 @@ class GroceryStore
      * Start a user/store combo off with this arbitrary list of grocery items by aisle
      * @param  integer $userId     WP user id
      * @param  integer $storeId    Store identifier
+     * @return void
      */
     public function initializeOrderedGroceryStoreItems($userId, $storeId)
     {

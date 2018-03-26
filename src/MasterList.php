@@ -4,7 +4,6 @@ namespace SteveSteele\Groceries;
 
 class MasterList extends GroceryList
 {
-
     // Declare properties
     public $userId;
     public $db;
@@ -14,7 +13,6 @@ class MasterList extends GroceryList
      * Save master user grocery list for specified store to the DB
      * @param  array $groceries    Grocery list items
      * @param  int   $storeId      Store identifier
-     *
      * @return int                 Number of rows updated or false if error
      */
     protected function setList($groceries, $storeId = null)
@@ -62,11 +60,8 @@ class MasterList extends GroceryList
      * @param  integer $a      Arbitrary item ID found above dragged item's new position
      * @param  integer $i      Dragged grocery item ID
      * @param  integer $b      Grocery item ID below new dragged item's position (acts as index w/in JS lib)
-     *
      * @return int             Number of rows updated or false if error
-     *
      * ...using above:below context here, not before:after
-     *
      */
     public function updateStoreOrder($storeId, $a, $i, $b)
     {
@@ -82,11 +77,8 @@ class MasterList extends GroceryList
      * @param  int $i         Dragged grocery item ID
      * @param  int $b         Grocery item ID below new dragged item's position (acts as index w/in JS lib)
      * @param  arr $list      Master list
-     *
      * @return arr            Reordered list
-     *
      * ...using above:below context here, not before:after
-     *
      */
     public function handleStoreItemReordering($storeId, $a, $i, $b, $list = [])
     {
@@ -218,7 +210,6 @@ class MasterList extends GroceryList
      * Prepend new ingredient to a user store's master list
      * @param  int $storeId    Store identifier
      * @param  int $termId     Newly assigned ingredient ID
-     *
      * @return int             Number of rows updated or false if error
      */
     public function insertNewIngredient($storeId, $termId)

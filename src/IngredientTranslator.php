@@ -4,7 +4,6 @@ namespace SteveSteele\Groceries;
 
 class IngredientTranslator
 {
-
     // Declare properties
     public $id = 'i';
     public $amount = 'a';

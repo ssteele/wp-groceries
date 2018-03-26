@@ -1,23 +1,13 @@
 <?php
 
-namespace SteveSteele\Groceries;
+namespace SteveSteele\GroceriesTest;
 
-use SteveSteele\Sanitizer;
+use SteveSteele\Groceries\CurrentList;
+use SteveSteele\TypeSanity\UserInput;
 use WP_Mock;
 
-class CurrentListTest extends \PHPUnit_Framework_TestCase
+class CurrentListTest extends BaseTestCase
 {
-
-    public function setUp()
-    {
-        WP_Mock::setUp();
-    }
-
-    public function tearDown()
-    {
-        WP_Mock::tearDown();
-    }
-
     public function testExtractSaveGroceries()
     {
         $userId = 1;
@@ -29,11 +19,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'i' => $currentItemInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEquals($currentItems, $currentItemInput);
         $this->assertEmpty($recipes);
         $this->assertEmpty($ingredients);
@@ -46,11 +36,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'i' => $currentItemInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEquals($currentItems, $currentItemInput);
         $this->assertEmpty($recipes);
         $this->assertEmpty($ingredients);
@@ -63,11 +53,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'ingredient' => $ingredientInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEmpty($recipes);
         $this->assertEquals($ingredients, $ingredientInput);
@@ -80,11 +70,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'ingredient' => $ingredientInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEmpty($recipes);
         $this->assertEquals($ingredients, $ingredientInput);
@@ -97,11 +87,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'recipe' => $recipeInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEquals($recipes, $recipeInput);
         $this->assertEmpty($ingredients);
@@ -114,11 +104,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'recipe' => $recipeInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEquals($recipes, $recipeInput);
         $this->assertEmpty($ingredients);
@@ -131,11 +121,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'new_ingredient' => $newIngredientInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEmpty($recipes);
         $this->assertEmpty($ingredients);
@@ -148,11 +138,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'new_ingredient' => $newIngredientInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEmpty($recipes);
         $this->assertEmpty($ingredients);
@@ -165,13 +155,13 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'typical_items_toggle' => '1',
             'submit' => 'Save Grocery List',
         ];
-        WP_Mock::wpFunction('get_typical_list_item_ids', [
+        WP_Mock::userFunction('get_typical_list_item_ids', [
             'args' => [$userId],
             'times' => 1,
             'return' => $typicalItemSaved,
         ]);
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEmpty($recipes);
         $this->assertEmpty($ingredients);
@@ -184,13 +174,13 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'typical_items_toggle' => '1',
             'submit' => 'Save Grocery List',
         ];
-        WP_Mock::wpFunction('get_typical_list_item_ids', [
+        WP_Mock::userFunction('get_typical_list_item_ids', [
             'args' => [$userId],
             'times' => 1,
             'return' => $typicalItemSaved,
         ]);
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEmpty($currentItems);
         $this->assertEmpty($recipes);
         $this->assertEmpty($ingredients);
@@ -206,11 +196,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'ingredient' => $ingredientInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEquals($currentItems, $currentItemInput);
         $this->assertEmpty($recipes);
         $this->assertEquals($ingredients, $ingredientInput);
@@ -229,11 +219,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'recipe' => $recipeInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEquals($currentItems, $currentItemInput);
         $this->assertEquals($recipes, $recipeInput);
         $this->assertEquals($ingredients, $ingredientInput);
@@ -255,11 +245,11 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'new_ingredient' => $newIngredientInput,
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEquals($currentItems, $currentItemInput);
         $this->assertEquals($recipes, $recipeInput);
         $this->assertEquals($ingredients, $ingredientInput);
@@ -284,16 +274,16 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
             'typical_items_toggle' => '1',
             'submit' => 'Save Grocery List',
         ];
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->will($this->returnArgument(0));
-        WP_Mock::wpFunction('get_typical_list_item_ids', [
+        WP_Mock::userFunction('get_typical_list_item_ids', [
             'args' => [$userId],
             'times' => 1,
             'return' => $typicalItemSaved,
         ]);
 
-        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $sanitizerStub);
+        list($currentItems, $recipes, $ingredients, $newIngredients, $typicalItems) = $currentList->extractSaveGroceries($post, $translatorStub);
         $this->assertEquals($currentItems, $currentItemInput);
         $this->assertEquals($recipes, $recipeInput);
         $this->assertEquals($ingredients, $ingredientInput);
@@ -311,8 +301,8 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         ];
 
         // mock sanitizer
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->willReturn($termIds);
 
         // mock get_term
@@ -380,7 +370,7 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         ];
 
         foreach ($terms as $term) {
-            WP_Mock::wpFunction('get_term', [
+            WP_Mock::userFunction('get_term', [
                 'args' => [$term['term_id'], 'ingredient', OBJECT],
                 'times' => 1,
                 'return' => (object) $term,
@@ -434,21 +424,21 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         $serialized = 'a:5:{i:0;a:6:{s:1:"i";i:20;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:1;a:6:{s:1:"i";i:21;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:2;a:6:{s:1:"i";i:22;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:3;a:6:{s:1:"i";i:23;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:4;a:6:{s:1:"i";i:24;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}}';
 
 
-        WP_Mock::wpFunction('maybe_serialize', [
+        WP_Mock::userFunction('maybe_serialize', [
             'args' => [$groceries],
             'times' => 1,
             'return' => $serialized,
         ]);
 
         // mock update_user_meta
-        WP_Mock::wpFunction('update_user_meta', [
+        WP_Mock::userFunction('update_user_meta', [
             'args' => [$userId, '_grocery_list', $serialized],
             'times' => 1,
             'return' => true,
         ]);
 
         $currentList = new CurrentList($userId);
-        $isNewIngredient = $currentList->saveGroceries($post, $sanitizerStub);
+        $isNewIngredient = $currentList->saveGroceries($post, $translatorStub);
         $this->assertFalse($isNewIngredient);
     }
 
@@ -462,8 +452,8 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         ];
 
         // mock sanitizer
-        $sanitizerStub = $this->createMock(Sanitizer::class);
-        $sanitizerStub->method('sanitize')
+        $translatorStub = $this->createMock(UserInput::class);
+        $translatorStub->method('sanitize')
             ->willReturn($termIds);
 
         // mock get_term
@@ -531,7 +521,7 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
         ];
 
         foreach ($terms as $term) {
-            WP_Mock::wpFunction('get_term', [
+            WP_Mock::userFunction('get_term', [
                 'args' => [$term['term_id'], 'ingredient', OBJECT],
                 'times' => 1,
                 'return' => (object) $term,
@@ -584,21 +574,21 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
 
         $serialized = 'a:5:{i:0;a:6:{s:1:"i";i:2;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:1;a:6:{s:1:"i";i:3;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:2;a:6:{s:1:"i";i:4;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:3;a:6:{s:1:"i";i:5;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}i:4;a:6:{s:1:"i";i:6;s:1:"a";s:0:"";s:1:"u";b:0;s:1:"t";s:1:"i";s:1:"o";s:0:"";s:1:"p";s:0:"";}}';
 
-        WP_Mock::wpFunction('maybe_serialize', [
+        WP_Mock::userFunction('maybe_serialize', [
             'args' => [$groceries],
             'times' => 1,
             'return' => $serialized,
         ]);
 
         // mock update_user_meta
-        WP_Mock::wpFunction('update_user_meta', [
+        WP_Mock::userFunction('update_user_meta', [
             'args' => [$userId, '_grocery_list', $serialized],
             'times' => 1,
             'return' => true,
         ]);
 
         $currentList = new CurrentList($userId);
-        $isNewIngredient = $currentList->saveGroceries($post, $sanitizerStub);
+        $isNewIngredient = $currentList->saveGroceries($post, $translatorStub);
         $this->assertFalse($isNewIngredient);
     }
 
@@ -620,7 +610,7 @@ class CurrentListTest extends \PHPUnit_Framework_TestCase
 
         $term = new \stdClass();
         $term->name = 'apple';
-        WP_Mock::wpFunction('get_term_by', [
+        WP_Mock::userFunction('get_term_by', [
             'args' => ['id', $termId, 'ingredient'],
             'times' => 1,
             'return' => $term,

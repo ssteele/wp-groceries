@@ -2,6 +2,8 @@
 
 namespace SteveSteele\Groceries;
 
+use SteveSteele\TypeSanity\UserInput;
+
 // http://shs.harvillesteele.com:8888/content/plugins/shs-grocery-list/src/ajax/remove-sorted-new-item.php?id=98
 
 $response = [
@@ -28,11 +30,13 @@ if (! user_can($userId, GROCERY_LIST_CAPABILITY)) {
     die();
 }
 
+$translator = new UserInput();
+
 // Grab the post variables
 $postVars = ['s', 'i'];
 
 foreach ($postVars as $p) {
-    $$p = shsSanitize($_POST[$p], 's');
+    $$p = $translator->sanitize($_POST[$p], 's');
     $$p = (is_string($$p)) ? intval($$p) : $$p;
 }
 
